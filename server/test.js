@@ -18,7 +18,6 @@ players.forEach(player=>{
 })
 
 var listener = game.GameStart();
-console.log(listener)
 listener.emit('setPos',{
 	pos:{
 		x:15,
@@ -29,8 +28,39 @@ listener.emit('setPos',{
 
 listener.emit('setOthello',{
 	pos:{
-		x:0,
+		x:1,
 		y:0
 	},
 	color:0
 })
+listener.emit('setOthello',{
+	pos:{
+		x:2,
+		y:0
+	},
+	color:0
+})
+listener.emit('setOthello',{
+	pos:{
+		x:3,
+		y:0
+	},
+	color:0
+})
+
+listener.emit('setOthello',{
+	pos:{
+		x:4,
+		y:0
+	},
+	color:2
+})
+
+listener.emit('setOthello',{
+	pos:{
+		x:0,
+		y:0
+	},
+	color:2
+})
+console.log(game)

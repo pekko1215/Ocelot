@@ -45,6 +45,7 @@ Game.prototype.setPos = function(e) {
 }
 
 Game.prototype.setOthello = function(e){
+	e.pos.y = [e.pos.x,e.pos.x = e.pos.y][0];
 	this.bord[e.pos.x][e.pos.y] = e.color;
 	this.reverse({
 		pos:e.pos,
@@ -65,6 +66,12 @@ Game.prototype.reverse = function(e){
 					(obj.pos.y+obj.def.y)>=bordSize){return false}
 				switch(obj.bord[obj.pos.x+obj.def.x][obj.pos.y+obj.def.y]){
 					case -1:
+						return false;
+					break;
+					case obj.color:
+						return true;
+					break;
+					default:
 						if(arguments.callee({
 							pos:{
 								x:obj.pos.x+obj.def.x,
@@ -77,12 +84,6 @@ Game.prototype.reverse = function(e){
 							obj.bord[obj.pos.x+obj.def.x][obj.pos.y+obj.def.y] = e.color;
 							return true;
 						};
-						return false;
-					break;
-					case obj.color:
-						return true;
-					break;
-					default:
 						return false;
 					break;
 				}
