@@ -9,7 +9,7 @@ module.exports = Game = function(option) {
         this[key] = this.option[key] || define[key];
     })
     this.status = 'wait';
-    this.bord = Array(option.bordSize).fill(Array(option.bordSize).fill(-1));
+    this.bord = JSON.parse(JSON.stringify(Array(option.bordSize).fill(Array(option.bordSize).fill(-1))));
     this.players = [];
     this.bordSize = option.bordSize
 }
@@ -41,7 +41,6 @@ Game.prototype.GameStart = function() {
 
 
 Game.prototype.setPos = function(e) {
-		console.log(this)
     this.players[e.player].pos = e.pos;
 }
 
