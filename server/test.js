@@ -18,6 +18,9 @@ players.forEach(player=>{
 })
 
 var listener = game.GameStart();
+
+listener.on('reverse',()=>console.log("ひｋｋるいかえった"))
+
 listener.emit('setPos',{
 	pos:{
 		x:15,

@@ -47,18 +47,22 @@ Game.prototype.setPos = function(e) {
 Game.prototype.setOthello = function(e){
 	e.pos.y = [e.pos.x,e.pos.x = e.pos.y][0];
 	this.bord[e.pos.x][e.pos.y] = e.color;
-	this.reverse({
+	if(this.reverse({
 		pos:e.pos,
 		color:e.color,
 		bordSize:this.bordSize
-	})
+	})){
+		this.emitter.emit('reverse',this);
+	}
 }
 
 Game.prototype.reverse = function(e){
 	var bordSize = this.bordSize
+	var flag = false;
 	for(var x=-1;x<=1;x++){
 		for(var y=-1;y<=1;y++){
 			if(x==0&&y==0){continue}
+			var count = 0;
 			(function(obj){
 				if( (obj.pos.x+obj.def.x)<0||
 					(obj.pos.y+obj.def.y)<0||
@@ -81,6 +85,7 @@ Game.prototype.reverse = function(e){
 							bord:obj.bord,
 							color:e.color
 						})){
+							count++;
 							obj.bord[obj.pos.x+obj.def.x][obj.pos.y+obj.def.y] = e.color;
 							return true;
 						};
@@ -92,7 +97,9 @@ Game.prototype.reverse = function(e){
 				def:{x:x,y:y},
 				bord:this.bord,
 				color:e.color
-			})
+			});
+			flag = (count!=0) || flag;
 		}
 	}
+	return flag;
 }
