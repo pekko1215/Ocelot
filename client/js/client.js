@@ -119,7 +119,6 @@ bord.forEach(function(bordLine, index1) {
         bordSquares[index1][index2].position.y = index2 * squareHeight;
         bordAxis.addChild(bordSquares[index1][index2]);
     })
-console.log(bordSquares[0][0]["x"])
 })
 //----------------------------
 
@@ -152,11 +151,16 @@ function animate() {
 
     bord.forEach(function(bordLine, index1) {
         bord.forEach(function(square, index2) {
+            var globx = bordSquares[index1][index2].position.x + bordAxis.position.x + squareWidth /2;
+            var globy = bordSquares[index1][index2].position.y + bordAxis.position.y + squareHeight / 2;
+
+            var playerx = width / 2;
+            var playery = height / 2;
+
+
             switch (true) {
-                case (bordSquares[index1][index2].position.x >= (width / 2) - squareWidth) &&
-                (bordSquares[index1][index2].position.x < width / 2) &&
-                (bordSquares[index1][index2].position.y >= height / 2) &&
-                (bordSquares[index1][index2].position.y < (height / 2) - squareHeight):
+                case Math.abs(globx-playerx)<=(squareWidth/2) &&
+                     Math.abs(globy-playery)<=(squareHeight/2):
                     // console.log("にょ");
                     bord[index1][index2] = 1;
                     break;
