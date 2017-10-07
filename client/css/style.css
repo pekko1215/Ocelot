@@ -1,0 +1,21 @@
+#nameInput{
+    -webkit-appearance: none;
+    border: none;
+    outline: 0px;
+    position: absolute;
+    top: 228px;
+    left: 62px;
+    font-size: 34px;
+    width: 251px;
+    background-color: #0f0f0f;
+    color:white;
+    text-align: center;
+}
+body{
+	margin: 0px;
+}
+#pixiview{
+	width: 100%;
+	height: 100%;
+	position: fixed;
+}
