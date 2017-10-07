@@ -13,12 +13,13 @@ module.exports = Room = function Room(option) {
     }
 
     Object.keys(define).forEach((key) => {
-        this[key] = this.option[key] || define[key];
+        this[key] = option[key] || define[key];
     })
 }
 
 Room.prototype.setGame = function(game){
 	this.game = game;
+    this.game.addPlayer(this.createBy)
 }
 
 function getUniqueStr(myStrong) {

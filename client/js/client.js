@@ -17,6 +17,10 @@ if (getDevice != 'other') {
     width = window.innerWidth;
     height = window.innerHeight;
 }
+
+var userId;
+var userName;
+
 ["resize", "orientationchange"].forEach((ev) => {
     window.addEventListener(ev, () => {
         width = document.getElementById('pixiview').offsetWidth
@@ -85,13 +89,117 @@ function LoginRender() {
     }
 
     function pushCreateUser() {
-        alert(input.value);
-        socket = io('http://localhost');
-        socket.on('connection', (socket) => {
-            console.log("con")
+        socket = io('http://192.168.0.9');
+        input.onkeypress = null;
+        socket.once('returnPlayer', (e) => {
+            input.readOnly = "true";
+            userId = e;
+            var clearCount = 20;
+            input.style.opacity = 1
+            var inter = setInterval(() => {
+                label.alpha -= 1. / clearCount;
+                input.style.opacity -= 1. / clearCount;
+                if (label.alpha <= 0) {
+                    clearInterval(inter)
+                    document.body.removeChild(input)
+                    stage.removeChild(label)
+                    RoomsRender();
+                }
+            }, 50)
         });
+        userName = input.value
+        socket.emit('createPlayer', {
+            name: input.value
+        })
     }
 
+}
+
+function RoomsRender() {
+    function createRoomPIXI(obj) {
+        var ret = new PIXI.Container();
+        var box = new PIXI.Graphics();
+        box.beginFill(0x002200, 1);
+        box.lineStyle(2, 0xffffff);
+        box.drawRect(5, 5, width / 4 * 3 - 5, height / 5 - 5);
+        box.endFill();
+        box.position.x = width / 4
+
+        box.interactive = true;
+        box.buttonMode = true;
+        function tevnt(){
+            if (obj.isStarted) { return }
+            var clearCount = 40;
+            var count = 0;
+            stage.children.forEach((e) => {
+                e.interactive = false;
+            })
+            var inter = setInterval(() => {
+                stage.children.forEach((e) => {
+                    e.alpha -= 1. / clearCount
+                })
+                if (count++ > clearCount) {
+                    clearInterval(inter)
+                    while(stage.children[0]) { stage.removeChild(stage.children[0]); }
+                    RoomStatusRender();
+                }
+            }, 5)
+        }
+        box.on('click' ,tevnt);
+        box.on('touchend' ,tevnt);
+
+        ret.addChild(box)
+
+        var NameLabel = new PIXI.Text(obj.name, { fontSize: "45pt", fill: obj.isStarted ? "#888888" : "#ffffff" });
+        NameLabel.x = width / 4 + 10;
+        NameLabel.y = 10
+        ret.addChild(NameLabel)
+
+        var CreateByLabel = new PIXI.Text(`by ${obj.createBy}`, { font: "13px Arial", fill: "#999999" })
+        CreateByLabel.x = width - 10 - CreateByLabel.width;
+        CreateByLabel.y = 10;
+        ret.addChild(CreateByLabel)
+
+        var indexx = width / 4 + 10;
+        var indexy = 10 + NameLabel.height + 5;
+        obj.players.some((player) => {
+            var label = new PIXI.Text(player.name, {
+                font: "18px Arial",
+                fill: player.color,
+                strokeThickness: 2
+            })
+            label.x = indexx;
+            label.y = indexy;
+            ret.addChild(label)
+            indexx += label.width + 2;
+            if (indexx >= box.width) {
+                indexy += label.height + 2;
+                indexx = width / 4 + 10;
+            }
+            if (indexy >= box.height) {
+                return true;
+            }
+        })
+
+        return ret;
+    }
+    socket.once('returnRooms', (data) => {
+        data.forEach((d, i) => {
+            var tmp = createRoomPIXI(d);
+            tmp.y = i * tmp.height;
+            stage.addChild(tmp);
+        })
+    })
+    socket.emit('getRooms');
+    renderer.render(stage);
+    (function animate() {
+        renderer.render(stage);
+        requestAnimationFrame(animate);
+    })()
+}
+
+function RoomStatusRender(){
+    GameRender()
 }
 
 LoginRender();
@@ -180,7 +288,7 @@ function GameRender() {
     var bord = [...Array(Horizontal).fill([...Array(Vertical).fill(0)])];
     //------------------
 
-    var bordAxis = new PIXI.DisplayObjectContainer(); //ボードを動かすための基点
+    var bordAxis = new PIXI.Container(); //ボードを動かすための基点
 
     var bordSquares = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical)] })];
     var squareWidth = 40;
@@ -233,8 +341,8 @@ function GameRender() {
 
         requestAnimationFrame(animate); // 次の描画タイミングでanimateを呼び出す
         //bordSquares[5][0].position.x += 1;
-        bordAxis.position.x += moveHor;
-        bordAxis.position.y += moveVer;
+        bordAxis.position.x += moveHor*3;
+        bordAxis.position.y += moveVer*3;
 
         bord.forEach(function(bordLine, index1) {
             bord.forEach(function(square, index2) {
