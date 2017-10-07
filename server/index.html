@@ -1,0 +1,13 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+    <script type="text/javascript">
+      const socket = io();
+      function emit(e){socket.emit('echo',e)}
+    </script>
+  </body>
+</html>
