@@ -288,13 +288,13 @@ function GameRender() {
             }
             var BaseControl = new PIXI.Graphics();
             BaseControl.lineStyle(1);
-            BaseControl.beginFill(0xffffff, 0.8);
+            BaseControl.beginFill(0xffffff, 0.2);
             BaseControl.drawCircle(startPos.x, startPos.y, 50);
             stage.addChild(BaseControl);
 
             var defControl = new PIXI.Graphics();
             defControl.lineStyle(1);
-            defControl.beginFill(0xffffff, 0.9);
+            defControl.beginFill(0xffffff, 0.4);
             defControl.drawCircle(0, 0, 30);
             defControl.x = startPos.x;
             defControl.y = startPos.y;
@@ -320,8 +320,8 @@ function GameRender() {
                     x: nowPos.x - startPos.x,
                     y: nowPos.y - startPos.y
                 }
-                moveHor = def.x/15
-                moveVer = def.y/15
+                moveHor = def.x / 15
+                moveVer = def.y / 15
                 defControl.x = nowPos.x;
                 defControl.y = nowPos.y;
             }
@@ -331,6 +331,8 @@ function GameRender() {
                 stage.removeChild(BaseControl);
                 moveHor = 0
                 moveVer = 0
+                stage.off('touchmove', move);
+                stage.off('touchend', end);
                 stage.once('touchstart', start);
             }
             stage.on('touchmove', move);
