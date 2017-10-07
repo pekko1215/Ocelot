@@ -41,8 +41,9 @@ var userName;
 
 
 // ステージを作る
-var stage = new PIXI.Container();
-
+var stage = new PIXI.Graphics();
+stage.beginFill(0x000000, 0); //完全透明の四角形を作る
+stage.drawRect(0, 0, width, height); //キャンバスと同じサイズ
 // レンダラーを作る
 var renderer = new PIXI.WebGLRenderer(width, height, { backgroundColor: 0x000000 });
 
@@ -127,7 +128,8 @@ function RoomsRender() {
 
         box.interactive = true;
         box.buttonMode = true;
-        function tevnt(){
+
+        function tevnt() {
             if (obj.isStarted) { return }
             var clearCount = 40;
             var count = 0;
@@ -140,13 +142,13 @@ function RoomsRender() {
                 })
                 if (count++ > clearCount) {
                     clearInterval(inter)
-                    while(stage.children[0]) { stage.removeChild(stage.children[0]); }
+                    while (stage.children[0]) { stage.removeChild(stage.children[0]); }
                     RoomStatusRender();
                 }
             }, 5)
         }
-        box.on('click' ,tevnt);
-        box.on('touchend' ,tevnt);
+        box.on('click', tevnt);
+        box.on('touchend', tevnt);
 
         ret.addChild(box)
 
@@ -198,7 +200,7 @@ function RoomsRender() {
     })()
 }
 
-function RoomStatusRender(){
+function RoomStatusRender() {
     GameRender()
 }
 
@@ -276,6 +278,66 @@ function GameRender() {
     up.release = VecVer(0);
     down.release = VecVer(0);
 
+    if (getDevice != 'other') {
+        var startPos = {}
+        stage.interactive = true;
+        stage.once('touchstart', function start(e) {
+            startPos = {
+                x: e.data.global.x,
+                y: e.data.global.y
+            }
+            var BaseControl = new PIXI.Graphics();
+            BaseControl.lineStyle(1);
+            BaseControl.beginFill(0xffffff, 0.8);
+            BaseControl.drawCircle(startPos.x, startPos.y, 50);
+            stage.addChild(BaseControl);
+
+            var defControl = new PIXI.Graphics();
+            defControl.lineStyle(1);
+            defControl.beginFill(0xffffff, 0.9);
+            defControl.drawCircle(0, 0, 30);
+            defControl.x = startPos.x;
+            defControl.y = startPos.y;
+            stage.addChild(defControl);
+
+            function move(e) {
+                var nowPos = {
+                    x: e.data.global.x,
+                    y: e.data.global.y
+                }
+                var length = Math.sqrt(Math.pow(startPos.x - nowPos.x, 2) + Math.pow(startPos.y - nowPos.y, 2));
+                if (length > 50 - 30 / 2) {
+                    var def = {
+                        x: nowPos.x - startPos.x,
+                        y: nowPos.y - startPos.y
+                    }
+                    def.x *= (50 - 30 / 2) / length
+                    def.y *= (50 - 30 / 2) / length;
+                    nowPos.x = def.x + startPos.x;
+                    nowPos.y = def.y + startPos.y;
+                }
+                var def = {
+                    x: nowPos.x - startPos.x,
+                    y: nowPos.y - startPos.y
+                }
+                moveHor = def.x/15
+                moveVer = def.y/15
+                defControl.x = nowPos.x;
+                defControl.y = nowPos.y;
+            }
+
+            function end() {
+                stage.removeChild(defControl);
+                stage.removeChild(BaseControl);
+                moveHor = 0
+                moveVer = 0
+                stage.once('touchstart', start);
+            }
+            stage.on('touchmove', move);
+            stage.on('touchend', end);
+        })
+    }
+
 
     // オブジェクトを作る
 
@@ -341,8 +403,8 @@ function GameRender() {
 
         requestAnimationFrame(animate); // 次の描画タイミングでanimateを呼び出す
         //bordSquares[5][0].position.x += 1;
-        bordAxis.position.x += moveHor*3;
-        bordAxis.position.y += moveVer*3;
+        bordAxis.position.x += moveHor * 3;
+        bordAxis.position.y += moveVer * 3;
 
         bord.forEach(function(bordLine, index1) {
             bord.forEach(function(square, index2) {
