@@ -280,6 +280,10 @@ function GameRender() {
 
     if (getDevice != 'other') {
         var startPos = {}
+
+        var largeSize = 50;
+        var smallSize = 30;
+
         stage.interactive = true;
         stage.once('touchstart', function start(e) {
             startPos = {
@@ -289,13 +293,13 @@ function GameRender() {
             var BaseControl = new PIXI.Graphics();
             BaseControl.lineStyle(1);
             BaseControl.beginFill(0xffffff, 0.2);
-            BaseControl.drawCircle(startPos.x, startPos.y, 50);
+            BaseControl.drawCircle(startPos.x, startPos.y, largeSize);
             stage.addChild(BaseControl);
 
             var defControl = new PIXI.Graphics();
             defControl.lineStyle(1);
             defControl.beginFill(0xffffff, 0.4);
-            defControl.drawCircle(0, 0, 30);
+            defControl.drawCircle(0, 0, smallSize);
             defControl.x = startPos.x;
             defControl.y = startPos.y;
             stage.addChild(defControl);
@@ -306,13 +310,13 @@ function GameRender() {
                     y: e.data.global.y
                 }
                 var length = Math.sqrt(Math.pow(startPos.x - nowPos.x, 2) + Math.pow(startPos.y - nowPos.y, 2));
-                if (length > 50 - 30 / 2) {
+                if (length > largeSize - smallSize / 2) {
                     var def = {
                         x: nowPos.x - startPos.x,
                         y: nowPos.y - startPos.y
                     }
-                    def.x *= (50 - 30 / 2) / length
-                    def.y *= (50 - 30 / 2) / length;
+                    def.x *= (largeSize - smallSize / 2) / length
+                    def.y *= (largeSize - smallSize / 2) / length;
                     nowPos.x = def.x + startPos.x;
                     nowPos.y = def.y + startPos.y;
                 }
@@ -320,8 +324,8 @@ function GameRender() {
                     x: nowPos.x - startPos.x,
                     y: nowPos.y - startPos.y
                 }
-                moveHor = def.x / 15
-                moveVer = def.y / 15
+                moveHor = def.x / (smallSize / 2)
+                moveVer = def.y / (smallSize / 2)
                 defControl.x = nowPos.x;
                 defControl.y = nowPos.y;
             }
