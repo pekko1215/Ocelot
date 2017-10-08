@@ -46,7 +46,7 @@ Game.prototype.setPos = function(e) {
 		return d.id === e.playerId
 	})].pos = e.pos;
     this.emitter.emit('changePos',{
-		player:e.player.id,
+		player:e.playerId,
 		pos:e.pos
     })
 }
