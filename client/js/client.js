@@ -395,10 +395,141 @@ function GameRender() {
 
     //----------------------------
 
+    //ｰｰパネル作成-----------------
+    var UiContainer = new PIXI.Container(); //UIをまとめるコンテナ
+    var UiPanel = new PIXI.Graphics();
+    var nameWindow = new PIXI.Graphics();
+    var timeWindow = new PIXI.Graphics();
+    var myOcelo = new PIXI.Graphics();
+    var itemWindow = new PIXI.Graphics();
+    var menuButton = new PIXI.Graphics();
+    var statusWindow = new PIXI.Graphics();
+    var map = new PIXI.Graphics();
+
+    //仮値
+    var myName = "けいとりん"
+    var myColor = 0xffffff;
+    var timer = 10;
+    var roomName = "アレフワ族の集い"
+    var status = [{name:"エターナルロア", color:0x3333ff, ocelo:5},{name:"けいとりん", color:0xffffff, ocelo:18}]
+    var statusTextName = [];
+    var statusTextOcelo = [];
+    //----
+    
+    //名前とかを乗せるUIの土台
+    UiPanel.lineStyle(2,0xffffff);
+    UiPanel.beginFill(0x000000);
+    UiPanel.drawRoundedRect(0,height-60,300,45, 20);
+    UiPanel.endFill();
+    UiContainer.addChild(UiPanel);
+
+    //プレイヤーネームを乗せるウィンドウ
+    nameWindow.lineStyle(1,0x000000);
+    nameWindow.beginFill(0x0000ff,0.8);
+    nameWindow.drawRoundedRect(0,height-40,300,22,12);
+    nameWindow.endFill();
+    UiPanel.addChild(nameWindow);
+    
+    //自分のオセロ色、見た目をどうにかしようとして一緒に枠部分も描いてる
+    myOcelo.lineStyle(1,0x0000000);
+    myOcelo.beginFill(0xfffffff,1);
+    myOcelo.drawCircle(25,height-40, 30);
+    myOcelo.endFill();
+    myOcelo.lineStyle(3,0x888888);
+    myOcelo.beginFill(myColor,1);
+    myOcelo.drawCircle(25,height-40, 25);
+    myOcelo.endFill();
+    UiPanel.addChild(myOcelo);
+    
+    //制限時間のためのウィンドウ、整数対応か小数対応か分かんなかったのでとりあえず整数で、てゆかたぶん幅的に整数の方がいいと思われ
+    timeWindow.lineStyle(2,0xffffff);
+    timeWindow.beginFill(0x6666ff,0.8);
+    timeWindow.drawRoundedRect(width/2 - 30, 5, 60, 40, 5);
+    timeWindow.endFill();
+    UiContainer.addChild(timeWindow);
+    
+    //アイテムウィンドウ、ボタン機能をあとから追加することになる？
+    itemWindow.lineStyle(2,0xffffff);
+    itemWindow.beginFill(0x000000,0.8);
+    itemWindow.drawRoundedRect(10, height-130, 55,55,15);
+    itemWindow.endFill();
+    UiContainer.addChild(itemWindow);
+    
+    //メニューボタン(仮)、とりあえず置いてみたけどメニュー開く必要あるのだろうか。
+    menuButton.lineStyle(2,0xffffff);
+    menuButton.beginFill(0xdddddd);
+    menuButton.drawRoundedRect(width - 120, 7, 100, 35, 10);
+    menuButton.endFill();
+    UiContainer.addChild(menuButton);
+    
+    //プレイヤーたちのオセロ数を表示するための枠、プレイヤーの色によっては正直見づらくなる。
+    statusWindow.lineStyle(1,0xffffff,0.6);
+    statusWindow.beginFill(0x000000,0.6);
+    statusWindow.drawRoundedRect(5,5,140,160,10);
+    statusWindow.endFill();
+    UiContainer.addChild(statusWindow);
+
+    //マップ、の枠部分、未完成。map.renderableをtrueにすると出現するようになる。
+    map.lineStyle(3,0x000000);
+    map.beginFill(0xffff00, 0.6);
+    map.drawCircle(width-60, height-60, 80);
+    map.endFill();
+    map.lineStyle(0);
+    map.beginFill(0x000000, 0.8);
+    map.drawCircle(width-60, height-60, 70);
+    map.endFill();
+    UiContainer.addChild(map);
+    map.renderable = false;
+
+
+    var nameText = new PIXI.Text(myName, {font:'bold 12pt Arial', fill:'white'});
+    var timeText = new PIXI.Text(timer, {font:'bold 25pt Arial', fill:'white'});
+    var roomText = new PIXI.Text("部屋名 : " + roomName, {font:'bold 10pt Arial', fill:'white'});
+    var itemText = new PIXI.Text("ITEM", {font:'bold 12pt Arial', fill:'white'});
+    var menuText = new PIXI.Text("MENU", {font:'bold 12pt Arial', fill:0x888888});
+
+    //プレイヤーネームのテキスト
+    nameText.position.x = 60;
+    nameText.position.y = height-37;
+    nameWindow.addChild(nameText);
+    
+    //制限時間のテキスト
+    timeText.position.x = width/2 - 20;
+    timeText.position.y = 7;
+    timeWindow.addChild(timeText);
+    
+    //部屋名のテキスト
+    roomText.position.x = 55;
+    roomText.position.y = height-55;
+    UiPanel.addChild(roomText);
+    
+    //ITEMの文字
+    itemText.position.x = 19;
+    itemText.position.y = height-150;
+    itemWindow.addChild(itemText);
+
+    //MENUの文字
+    menuText.position.x = width - 95;
+    menuText.position.y = 15;
+    menuButton.addChild(menuText);
+
+    //全プレイヤーの名前とオセロ数のテキスト、とりあえず連想配列の入った配列使ってるけどあくまでその場しのぎです。
+    status.forEach(function(player, index){
+        statusTextName[index] = new PIXI.Text("●"+player.name, {font:'bold 8pt Arial', fill:player.color});
+        statusTextOcelo[index] = new PIXI.Text(("0".repeat(3)+player.ocelo).slice(-3), {font:'bold 8pt Arial', fill:'white'});
+        statusTextName[index].position.x = 15;
+        statusTextName[index].position.y = 15 + index*20;
+        statusTextOcelo[index].position.x = 120;
+        statusTextOcelo[index].position.y = 15 + index*20;
+        statusWindow.addChild(statusTextName[index]);
+        statusWindow.addChild(statusTextOcelo[index]);
+    })   
+    //--------------------------------- 
 
     // オブジェクトをステージに乗せる
     stage.addChild(bordAxis);
     stage.addChild(PlayerPoint);
+    stage.addChild(UiContainer);
 
     // 次のアニメーションフレームでanimate()を呼び出してもらう
     animate();
