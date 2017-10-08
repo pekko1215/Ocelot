@@ -1,0 +1,143 @@
+[33mcommit 8553acc81d43755b5d0519b21cc638f2859d85e6[m
+Merge: fb6bd99 8f2db51
+Author: ヒデホヒ <s16t218@stu.kagawa-u.ac.jp>
+Date:   Sat Oct 7 15:46:03 2017 +0900
+
+    Merge pull request #3 from pekko1215/server
+    
+    Server
+
+[33mcommit fb6bd99261ed026f4766201a4d4233456268191b[m
+Merge: 64f9a5c b3c6547
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Sat Oct 7 15:39:50 2017 +0900
+
+    marge
+
+[33mcommit 64f9a5c69fd2d24d11c7dd62af83a4f235a99e4c[m
+Merge: d22b58b f101ebe
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Sat Oct 7 15:33:58 2017 +0900
+
+    Merge branch 'client'
+
+[33mcommit f101ebe55099010a7598ef13af1a501f525d74f1[m
+Merge: 465ada6 d22b58b
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Sat Oct 7 15:33:42 2017 +0900
+
+    Merge branch 'master' into client
+
+[33mcommit 465ada639baca19356316a5b4e78744443eeb55b[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Sat Oct 7 15:31:03 2017 +0900
+
+    dwada
+    
+    eedwad
+
+[33mcommit d22b58b58a2bc94c766b37d1d9068d7bbe6fff66[m
+Merge: a32d4e7 0ebc88f
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Sat Oct 7 15:25:26 2017 +0900
+
+    Merge branch 'client'
+
+[33mcommit 0ebc88fba05739bd2c4baeb35b3f7a4f5a6b80a3[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Sat Oct 7 15:16:53 2017 +0900
+
+    いろいろ祭り
+
+[33mcommit d210d6aa32b3b501b3dd8875feea2d2a44e511d6[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Sat Oct 7 11:10:34 2017 +0900
+
+    にゃーん
+
+[33mcommit 301789af16f28465842c6bd7bc435e1e25b9ab85[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Fri Oct 6 18:36:21 2017 +0900
+
+    田頭現配列の呪い
+
+[33mcommit 8f2db514875e29f485434c7ed1af7f6489acc92a[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Fri Oct 6 17:51:50 2017 +0900
+
+    dawdwadawda
+
+[33mcommit a3b036f4b42b1c973088503fbf32245ce833ca15[m
+Author: wv-shiryu <s16t255@stu.kagawa-u.ac.jp>
+Date:   Fri Oct 6 17:50:31 2017 +0900
+
+    カレー
+
+[33mcommit ae8fc94bd526e52673dfe6e77dea136645c3495c[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Fri Oct 6 13:37:24 2017 +0900
+
+    説明
+
+[33mcommit b3c6547a9e97f9b7ba8d1341e8dda1328a4ed60e[m
+Merge: a32d4e7 bfe0c14
+Author: ヒデホヒ <s16t218@stu.kagawa-u.ac.jp>
+Date:   Fri Oct 6 10:21:38 2017 +0900
+
+    Merge pull request #1 from pekko1215/server
+    
+    Server
+
+[33mcommit 99871724d89a746591362c341c6d0482e9d32f57[m
+Author: wv-shiryu <s16t255@stu.kagawa-u.ac.jp>
+Date:   Fri Oct 6 09:42:08 2017 +0900
+
+    コロッケ
+
+[33mcommit af193ef184d467dbf9e861c076365805ffc71ea4[m
+Author: wv-shiryu <s16t255@stu.kagawa-u.ac.jp>
+Date:   Fri Oct 6 09:41:13 2017 +0900
+
+    分かりません
+
+[33mcommit bfe0c14e7937c50a920a685b9730778f13b927b8[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Fri Oct 6 09:30:08 2017 +0900
+
+    READMEの変更
+
+[33mcommit 908b2a7a6cdeda654344bbe89e25b51c501da0c1[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Fri Oct 6 07:03:56 2017 +0900
+
+    ひっくり返す処理の実装
+
+[33mcommit 72bee3f619ac9ada091edec7138b576ea28dbc11[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Thu Oct 5 17:24:37 2017 +0900
+
+    tester
+
+[33mcommit 78dc595d2cb3b330b13e103836478ba6fe50e8f4[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Thu Oct 5 17:17:28 2017 +0900
+
+    Game,Playerの追加
+
+[33mcommit 380219ba8607303b112e8cd3640888a3f616a6b0[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Thu Oct 5 11:22:00 2017 +0900
+
+    CloudNodeでSocket.ioの実験
+
+[33mcommit a32d4e7cf6267339073b99b396a6383352e75cc9[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Thu Oct 5 08:55:48 2017 +0900
+
+    readme
+
+[33mcommit 0b9930af7ea4c649f96130f58b2df5130d94c8b8[m
+Author: pekko1215 <pekko1215@yahoo.co.jp>
+Date:   Thu Oct 5 08:49:16 2017 +0900
+
+    dwad
