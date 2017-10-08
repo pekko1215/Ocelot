@@ -275,10 +275,10 @@ function GameRender() {
         }
     }
 
-    right.press = VecHor(-5);
-    left.press = VecHor(5);
-    up.press = VecVer(5);
-    down.press = VecVer(-5);
+    right.press = VecHor(-1);
+    left.press = VecHor(1);
+    up.press = VecVer(1);
+    down.press = VecVer(-1);
 
     right.release = VecHor(0);
     left.release = VecHor(0);
@@ -331,8 +331,10 @@ function GameRender() {
                     x: nowPos.x - startPos.x,
                     y: nowPos.y - startPos.y
                 }
-                moveHor = def.x / (smallSize / 2)
-                moveVer = def.y / (smallSize / 2)
+                moveHor = def.x / (largeSize - smallSize /2)
+                moveVer = def.y / (largeSize - smallSize / 2)
+                moveVer *= 1.5;
+                moveHor *= 1.5
                 defControl.x = nowPos.x;
                 defControl.y = nowPos.y;
             }
@@ -360,7 +362,7 @@ function GameRender() {
     var Horizontal = 30;
     var Vertical = 30;
 
-    var bord = [...Array(Horizontal).fill([...Array(Vertical).fill(0)])];
+    var bord = [...Array(Horizontal).fill([...Array(Vertical).fill(1)])];
     //------------------
 
     var bordAxis = new PIXI.Container(); //ボードを動かすための基点
@@ -368,28 +370,47 @@ function GameRender() {
     var bordSquares = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical)] })];
     var squareWidth = 40;
     var squareHeight = 40;
-    bord.forEach(function(bordLine, index1) {
-        bordLine.forEach(function(square, index2) {
-            //console.log(index1 + " , " + index2);
-            bordSquares[index1][index2] = new PIXI.Graphics();
-            switch (square) {
-                case 0:
-                    //console.log(bordSquares[index1][index2]);
-                    bordSquares[index1][index2].beginFill(0xffffff, 1);
-                    bordSquares[index1][index2].tint = 0xccccccc;
-                    break;
-                case 1:
-                    bordSquares[index1][index2].beginFill(0xccffcc, 1);
-                    break;
-            }
-            bordSquares[index1][index2].lineStyle(2, 0x000000);
-            bordSquares[index1][index2].drawRect(0, 0, squareWidth, squareHeight);
-            bordSquares[index1][index2].endFill();
-            bordSquares[index1][index2].position.x = index1 * squareWidth;
-            bordSquares[index1][index2].position.y = index2 * squareHeight;
-            bordAxis.addChild(bordSquares[index1][index2]);
+    var BordObj = new PIXI.Graphics();
+    var oldBordData = JSON.parse(JSON.stringify(bord))
+
+    function drawBord() {
+        BordObj.lineStyle(2, 0x000000);
+        bord.forEach(function(bordLine, index1) {
+            bordLine.forEach(function(square, index2) {
+                var globx = BordObj.position.x + squareWidth * index1 + squareWidth/2 - 5;
+                var globy = BordObj.position.y + squareHeight * index2 + squareHeight/2 - 5;
+
+
+                var playerx = width / 2;
+                var playery = height / 2;
+
+                switch (true) {
+                    case Math.abs(globx - playerx) <= (squareWidth / 2) &&
+                         Math.abs(globy - playery) <= (squareHeight / 2):
+                        bord[index1][index2] = 1;
+                        if (oldBordData[index1][index2] == 0) {
+                            BordObj.beginFill(0xccffcc, 1);
+                        } else {
+                            return;
+                        }
+                        oldBordData[index1][index2] = 1;
+                        break;
+                    default:
+                        bord[index1][index2] = 0;
+                        if (oldBordData[index1][index2] == 1) {
+                            BordObj.beginFill(0x004400, 1);
+                        } else {
+                            return
+                        }
+                        oldBordData[index1][index2] = 0;
+                }
+                BordObj.drawRect(index1 * squareWidth, index2 * squareHeight, squareWidth, squareHeight);
+                BordObj.endFill();
+            })
         })
-    })
+    }
+    window.oldBordData = oldBordData
+    stage.addChild(BordObj);
     //----------------------------
 
     //--プレイヤーの生成-----------
@@ -418,101 +439,101 @@ function GameRender() {
     var myColor = 0xffffff;
     var timer = 10;
     var roomName = "アレフワ族の集い"
-    var status = [{name:"エターナルロア", color:0x3333ff, ocelo:5},{name:"けいとりん", color:0xffffff, ocelo:18}]
+    var status = [{ name: "エターナルロア", color: 0x3333ff, ocelo: 5 }, { name: "けいとりん", color: 0xffffff, ocelo: 18 }]
     var statusTextName = [];
     var statusTextOcelo = [];
     //----
-    
+
     //名前とかを乗せるUIの土台
-    UiPanel.lineStyle(2,0xffffff);
+    UiPanel.lineStyle(2, 0xffffff);
     UiPanel.beginFill(0x000000);
-    UiPanel.drawRoundedRect(0,height-60,300,45, 20);
+    UiPanel.drawRoundedRect(0, height - 60, 300, 45, 20);
     UiPanel.endFill();
     UiContainer.addChild(UiPanel);
 
     //プレイヤーネームを乗せるウィンドウ
-    nameWindow.lineStyle(1,0x000000);
-    nameWindow.beginFill(0x0000ff,0.8);
-    nameWindow.drawRoundedRect(0,height-40,300,22,12);
+    nameWindow.lineStyle(1, 0x000000);
+    nameWindow.beginFill(0x0000ff, 0.8);
+    nameWindow.drawRoundedRect(0, height - 40, 300, 22, 12);
     nameWindow.endFill();
     UiPanel.addChild(nameWindow);
-    
+
     //自分のオセロ色、見た目をどうにかしようとして一緒に枠部分も描いてる
-    myOcelo.lineStyle(1,0x0000000);
-    myOcelo.beginFill(0xfffffff,1);
-    myOcelo.drawCircle(25,height-40, 30);
+    myOcelo.lineStyle(1, 0x0000000);
+    myOcelo.beginFill(0xfffffff, 1);
+    myOcelo.drawCircle(25, height - 40, 30);
     myOcelo.endFill();
-    myOcelo.lineStyle(3,0x888888);
-    myOcelo.beginFill(myColor,1);
-    myOcelo.drawCircle(25,height-40, 25);
+    myOcelo.lineStyle(3, 0x888888);
+    myOcelo.beginFill(myColor, 1);
+    myOcelo.drawCircle(25, height - 40, 25);
     myOcelo.endFill();
     UiPanel.addChild(myOcelo);
-    
+
     //制限時間のためのウィンドウ、整数対応か小数対応か分かんなかったのでとりあえず整数で、てゆかたぶん幅的に整数の方がいいと思われ
-    timeWindow.lineStyle(2,0xffffff);
-    timeWindow.beginFill(0x6666ff,0.8);
-    timeWindow.drawRoundedRect(width/2 - 30, 5, 60, 40, 5);
+    timeWindow.lineStyle(2, 0xffffff);
+    timeWindow.beginFill(0x6666ff, 0.8);
+    timeWindow.drawRoundedRect(width / 2 - 30, 5, 60, 40, 5);
     timeWindow.endFill();
     UiContainer.addChild(timeWindow);
-    
+
     //アイテムウィンドウ、ボタン機能をあとから追加することになる？
-    itemWindow.lineStyle(2,0xffffff);
-    itemWindow.beginFill(0x000000,0.8);
-    itemWindow.drawRoundedRect(10, height-130, 55,55,15);
+    itemWindow.lineStyle(2, 0xffffff);
+    itemWindow.beginFill(0x000000, 0.8);
+    itemWindow.drawRoundedRect(10, height - 130, 55, 55, 15);
     itemWindow.endFill();
     UiContainer.addChild(itemWindow);
-    
+
     //メニューボタン(仮)、とりあえず置いてみたけどメニュー開く必要あるのだろうか。
-    menuButton.lineStyle(2,0xffffff);
+    menuButton.lineStyle(2, 0xffffff);
     menuButton.beginFill(0xdddddd);
     menuButton.drawRoundedRect(width - 120, 7, 100, 35, 10);
     menuButton.endFill();
     UiContainer.addChild(menuButton);
-    
+
     //プレイヤーたちのオセロ数を表示するための枠、プレイヤーの色によっては正直見づらくなる。
-    statusWindow.lineStyle(1,0xffffff,0.6);
-    statusWindow.beginFill(0x000000,0.6);
-    statusWindow.drawRoundedRect(5,5,140,160,10);
+    statusWindow.lineStyle(1, 0xffffff, 0.6);
+    statusWindow.beginFill(0x000000, 0.6);
+    statusWindow.drawRoundedRect(5, 5, 140, 160, 10);
     statusWindow.endFill();
     UiContainer.addChild(statusWindow);
 
     //マップ、の枠部分、未完成。map.renderableをtrueにすると出現するようになる。
-    map.lineStyle(3,0x000000);
+    map.lineStyle(3, 0x000000);
     map.beginFill(0xffff00, 0.6);
-    map.drawCircle(width-60, height-60, 80);
+    map.drawCircle(width - 60, height - 60, 80);
     map.endFill();
     map.lineStyle(0);
     map.beginFill(0x000000, 0.8);
-    map.drawCircle(width-60, height-60, 70);
+    map.drawCircle(width - 60, height - 60, 70);
     map.endFill();
     UiContainer.addChild(map);
     map.renderable = false;
 
 
-    var nameText = new PIXI.Text(myName, {font:'bold 12pt Arial', fill:'white'});
-    var timeText = new PIXI.Text(timer, {font:'bold 25pt Arial', fill:'white'});
-    var roomText = new PIXI.Text("部屋名 : " + roomName, {font:'bold 10pt Arial', fill:'white'});
-    var itemText = new PIXI.Text("ITEM", {font:'bold 12pt Arial', fill:'white'});
-    var menuText = new PIXI.Text("MENU", {font:'bold 12pt Arial', fill:0x888888});
+    var nameText = new PIXI.Text(myName, { font: 'bold 12pt Arial', fill: 'white' });
+    var timeText = new PIXI.Text(timer, { font: 'bold 25pt Arial', fill: 'white' });
+    var roomText = new PIXI.Text("部屋名 : " + roomName, { font: 'bold 10pt Arial', fill: 'white' });
+    var itemText = new PIXI.Text("ITEM", { font: 'bold 12pt Arial', fill: 'white' });
+    var menuText = new PIXI.Text("MENU", { font: 'bold 12pt Arial', fill: 0x888888 });
 
     //プレイヤーネームのテキスト
     nameText.position.x = 60;
-    nameText.position.y = height-37;
+    nameText.position.y = height - 37;
     nameWindow.addChild(nameText);
-    
+
     //制限時間のテキスト
-    timeText.position.x = width/2 - 20;
+    timeText.position.x = width / 2 - 20;
     timeText.position.y = 7;
     timeWindow.addChild(timeText);
-    
+
     //部屋名のテキスト
     roomText.position.x = 55;
-    roomText.position.y = height-55;
+    roomText.position.y = height - 55;
     UiPanel.addChild(roomText);
-    
+
     //ITEMの文字
     itemText.position.x = 19;
-    itemText.position.y = height-150;
+    itemText.position.y = height - 150;
     itemWindow.addChild(itemText);
 
     //MENUの文字
@@ -521,16 +542,16 @@ function GameRender() {
     menuButton.addChild(menuText);
 
     //全プレイヤーの名前とオセロ数のテキスト、とりあえず連想配列の入った配列使ってるけどあくまでその場しのぎです。
-    status.forEach(function(player, index){
-        statusTextName[index] = new PIXI.Text("●"+player.name, {font:'bold 8pt Arial', fill:player.color});
-        statusTextOcelo[index] = new PIXI.Text(("0".repeat(3)+player.ocelo).slice(-3), {font:'bold 8pt Arial', fill:'white'});
+    status.forEach(function(player, index) {
+        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold 8pt Arial', fill: player.color });
+        statusTextOcelo[index] = new PIXI.Text(("0".repeat(3) + player.ocelo).slice(-3), { font: 'bold 8pt Arial', fill: 'white' });
         statusTextName[index].position.x = 15;
-        statusTextName[index].position.y = 15 + index*20;
+        statusTextName[index].position.y = 15 + index * 20;
         statusTextOcelo[index].position.x = 120;
-        statusTextOcelo[index].position.y = 15 + index*20;
+        statusTextOcelo[index].position.y = 15 + index * 20;
         statusWindow.addChild(statusTextName[index]);
         statusWindow.addChild(statusTextOcelo[index]);
-    })   
+    })
     //--------------------------------- 
 
     // オブジェクトをステージに乗せる
@@ -543,56 +564,28 @@ function GameRender() {
 
     // アニメーション関数を定義する
     // setInterval(()=>console.log(bordSquares[1][2].x),1000);
+    var sendPosDirty = false;
+
     function animate() {
 
         requestAnimationFrame(animate); // 次の描画タイミングでanimateを呼び出す
         //bordSquares[5][0].position.x += 1;
-        bordAxis.position.x += moveHor * 3;
-        bordAxis.position.y += moveVer * 3;
+        BordObj.position.x += moveHor * 5;
+        BordObj.position.y += moveVer * 5;
 
-        if (moveHor!=0||moveVer!=0) {
+        if ((moveHor != 0 || moveVer != 0) && !sendPosDirty) {
             socket.emit('changePos', {
                 playerId: playerId,
                 roomId: roomId,
                 pos: {
-                    x: width / 2 - bordAxis.position.x,
-                    y: height / 2 - bordAxis.position.y
+                    x: width / 2 - BordObj.position.x,
+                    y: height / 2 - BordObj.position.y
                 }
             })
+            sendPosDirty = true;
+            setTimeout(() => sendPosDirty = false, 500)
         }
-
-        bord.forEach(function(bordLine, index1) {
-            bord.forEach(function(square, index2) {
-                var globx = bordSquares[index1][index2].position.x + bordAxis.position.x + squareWidth / 2;
-                var globy = bordSquares[index1][index2].position.y + bordAxis.position.y + squareHeight / 2;
-
-                var playerx = width / 2;
-                var playery = height / 2;
-
-
-                switch (true) {
-                    case Math.abs(globx - playerx) <= (squareWidth / 2) &&
-                    Math.abs(globy - playery) <= (squareHeight / 2):
-                        // console.log("にょ");
-                        bord[index1][index2] = 1;
-                        break;
-                    default:
-                        bord[index1][index2] = 0;
-                }
-                switch (bord[index1][index2]) {
-                    case 0:
-                        bordSquares[index1][index2].tint = 0x55cc55;
-                        break;
-                    case 1:
-                        bordSquares[index1][index2].tint = 0xccffcc;
-                        //console.log(bordSquares[index1][index2].tint)
-                        break;
-                    default:
-                        bordSquares[index1][index2].tint = 0x555555;
-                        console.log("zoba")
-                }
-            })
-        })
+        drawBord()
         renderer.render(stage); // 描画する
 
     }
