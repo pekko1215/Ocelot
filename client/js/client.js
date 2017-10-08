@@ -21,6 +21,9 @@ if (getDevice != 'other') {
 var playerId;
 var userName;
 var roomId;
+var roomName;
+var playerColor;
+var roomPlayers;
 
 ["resize", "orientationchange"].forEach((ev) => {
     window.addEventListener(ev, () => {
@@ -95,7 +98,8 @@ function LoginRender() {
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
             input.readOnly = "true";
-            playerId = e;
+            playerId = e.id;
+            playerColor = e.color;
             var clearCount = 20;
             input.style.opacity = 1
             var inter = setInterval(() => {
@@ -149,6 +153,16 @@ function RoomsRender() {
                         player: playerId
                     })
                     socket.once('joinedRoom', () => {
+                        roomId = obj.id;
+                        roomName = obj.name
+                        roomPlayers = obj.players.map((p)=>{
+                            return {
+                                id:p.id,
+                                name:p.name,
+                                color:p.color
+                            }
+                        })
+                        console.log(roomPlayers)
                         RoomStatusRender();
                     })
                 }
@@ -331,7 +345,7 @@ function GameRender() {
                     x: nowPos.x - startPos.x,
                     y: nowPos.y - startPos.y
                 }
-                moveHor = def.x / (largeSize - smallSize /2)
+                moveHor = def.x / (largeSize - smallSize / 2)
                 moveVer = def.y / (largeSize - smallSize / 2)
                 moveVer *= 1.5;
                 moveHor *= 1.5
@@ -359,41 +373,54 @@ function GameRender() {
     //--ボードの生成----------------
 
     //--仮ボードデータ作成
-    var Horizontal = 30;
-    var Vertical = 30;
+    var Horizontal = 15;
+    var Vertical = 15;
 
-    var bord = [...Array(Horizontal).fill([...Array(Vertical).fill(1)])];
+    var bord = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical).fill(0)] })];
     //------------------
 
     var bordAxis = new PIXI.Container(); //ボードを動かすための基点
 
-    var bordSquares = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical)] })];
     var squareWidth = 40;
     var squareHeight = 40;
     var BordObj = new PIXI.Graphics();
-    var oldBordData = JSON.parse(JSON.stringify(bord))
+    var oldBordData = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical).fill(1)] })];
+
+    var bordFirst = true;
 
     function drawBord() {
         BordObj.lineStyle(2, 0x000000);
         bord.forEach(function(bordLine, index1) {
             bordLine.forEach(function(square, index2) {
-                var globx = BordObj.position.x + squareWidth * index1 + squareWidth/2 - 5;
-                var globy = BordObj.position.y + squareHeight * index2 + squareHeight/2 - 5;
-
+                if (!(
+                        (bordFirst) ||
+                        (oldBordData[index1][index2]) ||
+                        (oldBordData[index1 - 1] && oldBordData[index1 - 1][index2]) ||
+                        (oldBordData[index1 + 1] && oldBordData[index1 + 1][index2]) ||
+                        (oldBordData[index1][index2 + 1]) ||
+                        (oldBordData[index1][index2 - 1]) ||
+                        (oldBordData[index1 - 1] && oldBordData[index1 - 1][index2 + 1]) ||
+                        (oldBordData[index1 - 1] && oldBordData[index1 - 1][index2 - 1]) ||
+                        (oldBordData[index1 + 1] && oldBordData[index1 + 1][index2 + 1]) ||
+                        (oldBordData[index1 + 1] && oldBordData[index1 + 1][index2 - 1])
+                    )) {
+                    return
+                }
+                var globx = BordObj.position.x + squareWidth * index1 + squareWidth / 2 - 5;
+                var globy = BordObj.position.y + squareHeight * index2 + squareHeight / 2 - 5;
 
                 var playerx = width / 2;
                 var playery = height / 2;
-
                 switch (true) {
                     case Math.abs(globx - playerx) <= (squareWidth / 2) &&
-                         Math.abs(globy - playery) <= (squareHeight / 2):
+                    Math.abs(globy - playery) <= (squareHeight / 2):
                         bord[index1][index2] = 1;
                         if (oldBordData[index1][index2] == 0) {
                             BordObj.beginFill(0xccffcc, 1);
                         } else {
                             return;
                         }
-                        oldBordData[index1][index2] = 1;
+                        // oldBordData[index1][index2] = 1;
                         break;
                     default:
                         bord[index1][index2] = 0;
@@ -402,15 +429,18 @@ function GameRender() {
                         } else {
                             return
                         }
-                        oldBordData[index1][index2] = 0;
+                        // oldBordData[index1][index2] = 0;
                 }
                 BordObj.drawRect(index1 * squareWidth, index2 * squareHeight, squareWidth, squareHeight);
                 BordObj.endFill();
             })
         })
+        oldBordData = JSON.parse(JSON.stringify(bord));
     }
     window.oldBordData = oldBordData
     stage.addChild(BordObj);
+    drawBord()
+    bordFirst = false
     //----------------------------
 
     //--プレイヤーの生成-----------
@@ -435,11 +465,15 @@ function GameRender() {
     var map = new PIXI.Graphics();
 
     //仮値
-    var myName = "けいとりん"
-    var myColor = 0xffffff;
+    var myName = userName;
+    var myColor = playerColor;
     var timer = 10;
-    var roomName = "アレフワ族の集い"
-    var status = [{ name: "エターナルロア", color: 0x3333ff, ocelo: 5 }, { name: "けいとりん", color: 0xffffff, ocelo: 18 }]
+    // var roomName
+    var status = roomPlayers.map((p)=>{p.ocelo = 0;return p})
+    // [
+    //     { name: "エターナルロア", color: 0x3333ff, ocelo: 5 },
+    //     { name: "けいとりん", color: 0xffffff, ocelo: 18 }
+    // ]
     var statusTextName = [];
     var statusTextOcelo = [];
     //----
