@@ -155,11 +155,11 @@ function RoomsRender() {
                     socket.once('joinedRoom', () => {
                         roomId = obj.id;
                         roomName = obj.name
-                        roomPlayers = obj.players.map((p)=>{
+                        roomPlayers = obj.players.map((p) => {
                             return {
-                                id:p.id,
-                                name:p.name,
-                                color:p.color
+                                id: p.id,
+                                name: p.name,
+                                color: p.color
                             }
                         })
                         console.log(roomPlayers)
@@ -230,74 +230,56 @@ LoginRender();
 function GameRender() {
 
     //キーコード
-    function keyboard(keyCode) {
-        var key = {}
-        key.code = keyCode
-        key.isDown = false
-        key.isUp = true
-        key.press = undefined
-        key.release = undefined
-        //The `downHandler`
-        key.downHandler = function(event) {
-            if (event.keyCode === key.code) {
-                //console.log(key);
-                if (key.isUp && key.press) { key.press(); }
-                key.isDown = true
-                key.isUp = false
-            }
-            event.preventDefault()
-        }
-        //The `upHandler`
-        key.upHandler = function(event) {
-            if (event.keyCode === key.code) {
-                if (key.isDown && key.release) { key.release() }
-                key.isDown = false
-                key.isUp = true
-            }
-            event.preventDefault()
-        }
-        //Attach event listeners
-        window.addEventListener(
-            "keydown", key.downHandler.bind(key), false
-        )
-        window.addEventListener(
-            "keyup", key.upHandler.bind(key), false
-        )
-        return key
+    function keyBoardListener() {
+        this.listeners = {};
+        this.onChange = null;
     }
+    keyBoardListener.prototype.setListener = function(keycode, label) {
+        this.listeners[label] = false
+        window.addEventListener("keydown", e => {
+            if (e.keyCode == keycode) {
+                this.listeners[label] = true;
+                this.onChange && this.onChange(this.listeners);
+            }
+        })
+        window.addEventListener("keyup", e => {
+            if (e.keyCode == keycode) {
+                this.listeners[label] = false;
+                this.onChange && this.onChange(this.listeners);
+            }
+        })
+    }
+    var keyListener = new keyBoardListener;
 
-    //var keyObject = keyboard(asciiKeyCodeNumber)
-
-    // キーボード
-    var left = keyboard(37)
-    var up = keyboard(38)
-    var right = keyboard(39)
-    var down = keyboard(40)
+    keyListener.setListener(37, "left");
+    keyListener.setListener(38, "up");
+    keyListener.setListener(39, "right");
+    keyListener.setListener(40, "down");
 
     var moveHor = 0;
     var moveVer = 0;
-
-    function VecHor(vx) {
-        return function() {
-            moveHor = vx;
-        }
+    keyListener.onChange = (e) => {
+        moveHor = 0;
+        moveVer = 0;
+        Object.keys(e).forEach((label) => {
+            if(!e[label]){return}
+            switch (label) {
+                case 'left':
+                    moveHor++;
+                break;
+                case 'right':
+                    moveHor--;
+                break;
+                case 'up':
+                    moveVer++;
+                break;
+                case 'down':
+                    moveVer--;
+                break;
+            }
+        })
     }
 
-    function VecVer(vy) {
-        return function() {
-            moveVer = vy;
-        }
-    }
-
-    right.press = VecHor(-1);
-    left.press = VecHor(1);
-    up.press = VecVer(1);
-    down.press = VecVer(-1);
-
-    right.release = VecHor(0);
-    left.release = VecHor(0);
-    up.release = VecVer(0);
-    down.release = VecVer(0);
 
     if (getDevice != 'other') {
         var startPos = {}
@@ -469,7 +451,7 @@ function GameRender() {
     var myColor = playerColor;
     var timer = 10;
     // var roomName
-    var status = roomPlayers.map((p)=>{p.ocelo = 0;return p})
+    var status = roomPlayers.map((p) => { p.ocelo = 0; return p })
     // [
     //     { name: "エターナルロア", color: 0x3333ff, ocelo: 5 },
     //     { name: "けいとりん", color: 0xffffff, ocelo: 18 }
