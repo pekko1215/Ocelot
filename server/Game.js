@@ -3,7 +3,9 @@ var EventEmitter = require('events').EventEmitter;
 module.exports = Game = function(option) {
     option = option || {};
     this.option = option;
-    var define = {}
+    var define = {
+        emitter: null
+    }
 
     Object.keys(define).forEach((key) => {
         this[key] = this.option[key] || define[key];
@@ -30,10 +32,9 @@ Game.prototype.getPlayers = function() {
 Game.prototype.GameStart = function() {
     if (this.status !== "wait") { return false; }
     if (this.players.length === 0) { return false; }
-    var emitter = new EventEmitter;
 
-    emitter.on('setPos',(e)=>this.setPos(e))
-    emitter.on('setOthello', (e)=>this.setOthello(e))
+    emitter.on('setPos', (e) => this.setPos(e))
+    emitter.on('setOthello', (e) => this.setOthello(e))
 
     this.emitter = emitter;
     return emitter;
@@ -41,65 +42,72 @@ Game.prototype.GameStart = function() {
 
 
 Game.prototype.setPos = function(e) {
-    this.players[e.player].pos = e.pos;
+    this.players[this.players.findIndex((d)=>{
+		return d.id === e.playerId
+	})].pos = e.pos;
+    this.emitter.emit('changePos',{
+		player:e.playerId,
+		pos:e.pos
+    })
 }
 
-Game.prototype.setOthello = function(e){
-	e.pos.y = [e.pos.x,e.pos.x = e.pos.y][0];
-	this.bord[e.pos.x][e.pos.y] = e.color;
-	if(this.reverse({
-		pos:e.pos,
-		color:e.color,
-		bordSize:this.bordSize
-	})){
-		this.emitter.emit('reverse',this);
-	}
+Game.prototype.setOthello = function(e) {
+    e.pos.y = [e.pos.x, e.pos.x = e.pos.y][0];
+    this.bord[e.pos.x][e.pos.y] = e.color;
+    this.emitter.emit('')
+    if (this.reverse({
+            pos: e.pos,
+            color: e.color,
+            bordSize: this.bordSize
+        })) {
+        this.emitter.emit('reverse', this);
+    }
 }
 
-Game.prototype.reverse = function(e){
-	var bordSize = this.bordSize
-	var flag = false;
-	for(var x=-1;x<=1;x++){
-		for(var y=-1;y<=1;y++){
-			if(x==0&&y==0){continue}
-			var count = 0;
-			(function(obj){
-				if( (obj.pos.x+obj.def.x)<0||
-					(obj.pos.y+obj.def.y)<0||
-					(obj.pos.x+obj.def.x)>=bordSize||
-					(obj.pos.y+obj.def.y)>=bordSize){return false}
-				switch(obj.bord[obj.pos.x+obj.def.x][obj.pos.y+obj.def.y]){
-					case -1:
-						return false;
-					break;
-					case obj.color:
-						return true;
-					break;
-					default:
-						if(arguments.callee({
-							pos:{
-								x:obj.pos.x+obj.def.x,
-								y:obj.pos.y+obj.def.y
-							},
-							def:obj.def,
-							bord:obj.bord,
-							color:e.color
-						})){
-							count++;
-							obj.bord[obj.pos.x+obj.def.x][obj.pos.y+obj.def.y] = e.color;
-							return true;
-						};
-						return false;
-					break;
-				}
-			})({
-				pos:e.pos,
-				def:{x:x,y:y},
-				bord:this.bord,
-				color:e.color
-			});
-			flag = (count!=0) || flag;
-		}
-	}
-	return flag;
+Game.prototype.reverse = function(e) {
+    var bordSize = this.bordSize
+    var flag = false;
+    for (var x = -1; x <= 1; x++) {
+        for (var y = -1; y <= 1; y++) {
+            if (x == 0 && y == 0) { continue }
+            var count = 0;
+            (function(obj) {
+                if ((obj.pos.x + obj.def.x) < 0 ||
+                    (obj.pos.y + obj.def.y) < 0 ||
+                    (obj.pos.x + obj.def.x) >= bordSize ||
+                    (obj.pos.y + obj.def.y) >= bordSize) { return false }
+                switch (obj.bord[obj.pos.x + obj.def.x][obj.pos.y + obj.def.y]) {
+                    case -1:
+                        return false;
+                        break;
+                    case obj.color:
+                        return true;
+                        break;
+                    default:
+                        if (arguments.callee({
+                                pos: {
+                                    x: obj.pos.x + obj.def.x,
+                                    y: obj.pos.y + obj.def.y
+                                },
+                                def: obj.def,
+                                bord: obj.bord,
+                                color: e.color
+                            })) {
+                            count++;
+                            obj.bord[obj.pos.x + obj.def.x][obj.pos.y + obj.def.y] = e.color;
+                            return true;
+                        };
+                        return false;
+                        break;
+                }
+            })({
+                pos: e.pos,
+                def: { x: x, y: y },
+                bord: this.bord,
+                color: e.color
+            });
+            flag = (count != 0) || flag;
+        }
+    }
+    return flag;
 }

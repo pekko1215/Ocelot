@@ -18,8 +18,9 @@ if (getDevice != 'other') {
     height = window.innerHeight;
 }
 
-var userId;
+var playerId;
 var userName;
+var roomId;
 
 ["resize", "orientationchange"].forEach((ev) => {
     window.addEventListener(ev, () => {
@@ -94,7 +95,7 @@ function LoginRender() {
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
             input.readOnly = "true";
-            userId = e;
+            playerId = e;
             var clearCount = 20;
             input.style.opacity = 1
             var inter = setInterval(() => {
@@ -143,7 +144,13 @@ function RoomsRender() {
                 if (count++ > clearCount) {
                     clearInterval(inter)
                     while (stage.children[0]) { stage.removeChild(stage.children[0]); }
-                    RoomStatusRender();
+                    socket.emit('joinRoom', {
+                        room: roomId = obj.id,
+                        player: playerId
+                    })
+                    socket.once('joinedRoom', () => {
+                        RoomStatusRender();
+                    })
                 }
             }, 5)
         }
@@ -542,6 +549,17 @@ function GameRender() {
         //bordSquares[5][0].position.x += 1;
         bordAxis.position.x += moveHor * 3;
         bordAxis.position.y += moveVer * 3;
+
+        if (moveHor!=0||moveVer!=0) {
+            socket.emit('changePos', {
+                playerId: playerId,
+                roomId: roomId,
+                pos: {
+                    x: width / 2 - bordAxis.position.x,
+                    y: height / 2 - bordAxis.position.y
+                }
+            })
+        }
 
         bord.forEach(function(bordLine, index1) {
             bord.forEach(function(square, index2) {

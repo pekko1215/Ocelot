@@ -23,7 +23,8 @@ var room = new Room({
     game: null
 })
 var game = new Game({
-    bordSize: 15
+    bordSize: 15,
+    emitter:io
 })
 room.setGame(game);
 ["pekko1215", "猫丸", "🍣野郎", "アルギン酸ナトリウム", "ゴリラ植松"].forEach((name) => {
@@ -42,7 +43,8 @@ var room = new Room({
     game: null
 })
 var game = new Game({
-    bordSize: 15
+    bordSize: 15,
+    emitter:io
 })
 room.setGame(game);
 ["pekko1215", "猫丸", "🍣野郎", "アルギン酸ナトリウム", "ゴリラ植松"].forEach((name) => {
@@ -105,16 +107,33 @@ io.on('connection', (socket) => {
             game: null
         })
         var game = new Game({
-            bordSize: data.bordSize || 15
+            bordSize: data.bordSize || 15,
+            emitter:socket
         })
         game.addPlayer(Players[data.createBy])
         room.setGame(game);
         Rooms[room.id] = room;
+        console.log(`Create Room ${room.name} by ${room.createBy.name}`)
         socket.emit('returnRoom', room.id);
     })
 
     socket.on('joinRoom', (data) => {
-        Rooms[data.room].addPlayer(Players[data.player]);
+        Rooms[data.room].game.addPlayer(Players[data.player]);
+        console.log(`Join Room ${Players[data.player].name} to ${Rooms[data.room].name}`)
+		socket.emit('joinedRoom')
+    })
+
+    socket.on('getRoom',(roomId)=>{
+		socket.emit('returnRoom',Rooms[roomId]);
+    })
+
+    socket.on('changePos',(data)=>{
+		// console.log(data)
+		Rooms[data.roomId].game.setPos({
+			playerId:data.playerId,
+			pos:data.pos,
+		});
+		console.log(`${Players[data.playerId].name} move to ${data.pos.x},${data.pos.y}`)
     })
 });
 
