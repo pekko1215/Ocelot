@@ -42,6 +42,9 @@ var roomPlayers;
     })
 })
 
+width = 320;
+height = 480;
+
 
 
 // ステージを作る
@@ -94,7 +97,7 @@ function LoginRender() {
     }
 
     function pushCreateUser() {
-        socket = io('http://192.168.0.9');
+        socket = io('http://ocelot.cloudno.de');
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
             input.readOnly = "true";
@@ -189,7 +192,7 @@ function RoomsRender() {
             var label = new PIXI.Text(player.name, {
                 font: "18px Arial",
                 fill: player.color,
-                strokeThickness: 2
+                strokeThickness: 'http://ocelot.cloudno.de'
             })
             label.x = indexx;
             label.y = indexy;
@@ -226,7 +229,7 @@ function RoomStatusRender() {
 }
 
 LoginRender();
-// GameRender();
+//GameRender();
 function GameRender() {
 
     //キーコード
@@ -442,9 +445,10 @@ function GameRender() {
     var timeWindow = new PIXI.Graphics();
     var myOcelo = new PIXI.Graphics();
     var itemWindow = new PIXI.Graphics();
-    var menuButton = new PIXI.Graphics();
+    //var menuButton = new PIXI.Graphics();
     var statusWindow = new PIXI.Graphics();
     var map = new PIXI.Graphics();
+
 
     //仮値
     var myName = userName;
@@ -488,7 +492,7 @@ function GameRender() {
     //制限時間のためのウィンドウ、整数対応か小数対応か分かんなかったのでとりあえず整数で、てゆかたぶん幅的に整数の方がいいと思われ
     timeWindow.lineStyle(2, 0xffffff);
     timeWindow.beginFill(0x6666ff, 0.8);
-    timeWindow.drawRoundedRect(width / 2 - 30, 5, 60, 40, 5);
+    timeWindow.drawRoundedRect(width - 65, 5, 60, 40, 5);
     timeWindow.endFill();
     UiContainer.addChild(timeWindow);
 
@@ -500,16 +504,20 @@ function GameRender() {
     UiContainer.addChild(itemWindow);
 
     //メニューボタン(仮)、とりあえず置いてみたけどメニュー開く必要あるのだろうか。
-    menuButton.lineStyle(2, 0xffffff);
-    menuButton.beginFill(0xdddddd);
-    menuButton.drawRoundedRect(width - 120, 7, 100, 35, 10);
-    menuButton.endFill();
-    UiContainer.addChild(menuButton);
+    // menuButton.lineStyle(2, 0xffffff);
+    // menuButton.beginFill(0xdddddd);
+    // menuButton.drawRoundedRect(width - 120, 7, 100, 35, 10);
+    // menuButton.endFill();
+    // UiContainer.addChild(menuButton);
+
+    var statusWidth = (width/2 < 200) ? width/2 : 200;
+    var statusHeight = 10 + status.length * 15;
 
     //プレイヤーたちのオセロ数を表示するための枠、プレイヤーの色によっては正直見づらくなる。
     statusWindow.lineStyle(1, 0xffffff, 0.6);
     statusWindow.beginFill(0x000000, 0.6);
-    statusWindow.drawRoundedRect(5, 5, 140, 160, 10);
+    //statusWindow.drawRoundedRect(5, 5, 140, 160, 10);
+    statusWindow.drawRoundedRect(5,5, statusWidth, statusHeight, 10);
     statusWindow.endFill();
     UiContainer.addChild(statusWindow);
 
@@ -530,7 +538,7 @@ function GameRender() {
     var timeText = new PIXI.Text(timer, { font: 'bold 25pt Arial', fill: 'white' });
     var roomText = new PIXI.Text("部屋名 : " + roomName, { font: 'bold 10pt Arial', fill: 'white' });
     var itemText = new PIXI.Text("ITEM", { font: 'bold 12pt Arial', fill: 'white' });
-    var menuText = new PIXI.Text("MENU", { font: 'bold 12pt Arial', fill: 0x888888 });
+    //var menuText = new PIXI.Text("MENU", { font: 'bold 12pt Arial', fill: 0x888888 });
 
     //プレイヤーネームのテキスト
     nameText.position.x = 60;
@@ -538,7 +546,7 @@ function GameRender() {
     nameWindow.addChild(nameText);
 
     //制限時間のテキスト
-    timeText.position.x = width / 2 - 20;
+    timeText.position.x = width - 55;
     timeText.position.y = 7;
     timeWindow.addChild(timeText);
 
@@ -553,18 +561,18 @@ function GameRender() {
     itemWindow.addChild(itemText);
 
     //MENUの文字
-    menuText.position.x = width - 95;
-    menuText.position.y = 15;
-    menuButton.addChild(menuText);
+    // menuText.position.x = width - 95;
+    // menuText.position.y = 15;
+    // menuButton.addChild(menuText);
 
     //全プレイヤーの名前とオセロ数のテキスト、とりあえず連想配列の入った配列使ってるけどあくまでその場しのぎです。
     status.forEach(function(player, index) {
-        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold 8pt Arial', fill: player.color });
+        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold '+8+'pt Arial', fill: player.color });
         statusTextOcelo[index] = new PIXI.Text(("0".repeat(3) + player.ocelo).slice(-3), { font: 'bold 8pt Arial', fill: 'white' });
         statusTextName[index].position.x = 15;
-        statusTextName[index].position.y = 15 + index * 20;
-        statusTextOcelo[index].position.x = 120;
-        statusTextOcelo[index].position.y = 15 + index * 20;
+        statusTextName[index].position.y = 15 + index * 15;
+        statusTextOcelo[index].position.x = statusWidth - 25;
+        statusTextOcelo[index].position.y = 15 + index * 15;
         statusWindow.addChild(statusTextName[index]);
         statusWindow.addChild(statusTextOcelo[index]);
     })
