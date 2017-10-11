@@ -94,7 +94,7 @@ function LoginRender() {
     }
 
     function pushCreateUser() {
-        socket = io('http://192.168.0.9');
+        socket = io('http://ocelot.cloudno.de');
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
             input.readOnly = "true";
@@ -372,8 +372,8 @@ function GameRender() {
 
     function drawBord() {
         BordObj.lineStyle(2, 0x000000);
-        bord.forEach(function(bordLine, index1) {
-            bordLine.forEach(function(square, index2) {
+        bord.some(function(bordLine, index1) {
+            return bordLine.some(function(square, index2) {
                 if (!(
                         (bordFirst) ||
                         (oldBordData[index1][index2]) ||
@@ -395,7 +395,7 @@ function GameRender() {
                 var playery = height / 2;
                 switch (true) {
                     case Math.abs(globx - playerx) <= (squareWidth / 2) &&
-                    Math.abs(globy - playery) <= (squareHeight / 2):
+                         Math.abs(globy - playery) <= (squareHeight / 2):
                         bord[index1][index2] = 1;
                         if (oldBordData[index1][index2] == 0) {
                             BordObj.beginFill(0xccffcc, 1);
