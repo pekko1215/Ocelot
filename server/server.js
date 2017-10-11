@@ -87,7 +87,7 @@ io.on('connection', (socket) => {
         })
         Players[player.id] = player;
         console.log(`Create Player ${data.name} -> ${player.id}`)
-        socket.emit('returnPlayer', player.id);
+        socket.emit('returnPlayer', {id:player.id,color:player.color});
     })
 
     //ルームの作成

@@ -21,6 +21,9 @@ if (getDevice != 'other') {
 var playerId;
 var userName;
 var roomId;
+var roomName;
+var playerColor;
+var roomPlayers;
 
 ["resize", "orientationchange"].forEach((ev) => {
     window.addEventListener(ev, () => {
@@ -38,6 +41,9 @@ var roomId;
         renderer.resize(width, height)
     })
 })
+
+width = 320;
+height = 480;
 
 
 
@@ -91,11 +97,12 @@ function LoginRender() {
     }
 
     function pushCreateUser() {
-        socket = io('http://192.168.0.9');
+        socket = io('http://ocelot.cloudno.de');
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
             input.readOnly = "true";
-            playerId = e;
+            playerId = e.id;
+            playerColor = e.color;
             var clearCount = 20;
             input.style.opacity = 1
             var inter = setInterval(() => {
@@ -149,6 +156,16 @@ function RoomsRender() {
                         player: playerId
                     })
                     socket.once('joinedRoom', () => {
+                        roomId = obj.id;
+                        roomName = obj.name
+                        roomPlayers = obj.players.map((p) => {
+                            return {
+                                id: p.id,
+                                name: p.name,
+                                color: p.color
+                            }
+                        })
+                        console.log(roomPlayers)
                         RoomStatusRender();
                     })
                 }
@@ -175,7 +192,7 @@ function RoomsRender() {
             var label = new PIXI.Text(player.name, {
                 font: "18px Arial",
                 fill: player.color,
-                strokeThickness: 2
+                strokeThickness: 'http://ocelot.cloudno.de'
             })
             label.x = indexx;
             label.y = indexy;
@@ -212,78 +229,60 @@ function RoomStatusRender() {
 }
 
 LoginRender();
-// GameRender();
+//GameRender();
 function GameRender() {
 
     //キーコード
-    function keyboard(keyCode) {
-        var key = {}
-        key.code = keyCode
-        key.isDown = false
-        key.isUp = true
-        key.press = undefined
-        key.release = undefined
-        //The `downHandler`
-        key.downHandler = function(event) {
-            if (event.keyCode === key.code) {
-                //console.log(key);
-                if (key.isUp && key.press) { key.press(); }
-                key.isDown = true
-                key.isUp = false
-            }
-            event.preventDefault()
-        }
-        //The `upHandler`
-        key.upHandler = function(event) {
-            if (event.keyCode === key.code) {
-                if (key.isDown && key.release) { key.release() }
-                key.isDown = false
-                key.isUp = true
-            }
-            event.preventDefault()
-        }
-        //Attach event listeners
-        window.addEventListener(
-            "keydown", key.downHandler.bind(key), false
-        )
-        window.addEventListener(
-            "keyup", key.upHandler.bind(key), false
-        )
-        return key
+    function keyBoardListener() {
+        this.listeners = {};
+        this.onChange = null;
     }
+    keyBoardListener.prototype.setListener = function(keycode, label) {
+        this.listeners[label] = false
+        window.addEventListener("keydown", e => {
+            if (e.keyCode == keycode) {
+                this.listeners[label] = true;
+                this.onChange && this.onChange(this.listeners);
+            }
+        })
+        window.addEventListener("keyup", e => {
+            if (e.keyCode == keycode) {
+                this.listeners[label] = false;
+                this.onChange && this.onChange(this.listeners);
+            }
+        })
+    }
+    var keyListener = new keyBoardListener;
 
-    //var keyObject = keyboard(asciiKeyCodeNumber)
-
-    // キーボード
-    var left = keyboard(37)
-    var up = keyboard(38)
-    var right = keyboard(39)
-    var down = keyboard(40)
+    keyListener.setListener(37, "left");
+    keyListener.setListener(38, "up");
+    keyListener.setListener(39, "right");
+    keyListener.setListener(40, "down");
 
     var moveHor = 0;
     var moveVer = 0;
-
-    function VecHor(vx) {
-        return function() {
-            moveHor = vx;
-        }
+    keyListener.onChange = (e) => {
+        moveHor = 0;
+        moveVer = 0;
+        Object.keys(e).forEach((label) => {
+            if(!e[label]){return}
+            switch (label) {
+                case 'left':
+                    moveHor++;
+                break;
+                case 'right':
+                    moveHor--;
+                break;
+                case 'up':
+                    moveVer++;
+                break;
+                case 'down':
+                    moveVer--;
+                break;
+            }
+        })
     }
 
-    function VecVer(vy) {
-        return function() {
-            moveVer = vy;
-        }
-    }
-
-    right.press = VecHor(-5);
-    left.press = VecHor(5);
-    up.press = VecVer(5);
-    down.press = VecVer(-5);
-
-    right.release = VecHor(0);
-    left.release = VecHor(0);
-    up.release = VecVer(0);
-    down.release = VecVer(0);
 
     if (getDevice != 'other') {
         var startPos = {}
@@ -331,8 +330,10 @@ function GameRender() {
                     x: nowPos.x - startPos.x,
                     y: nowPos.y - startPos.y
                 }
-                moveHor = def.x / (smallSize / 2)
-                moveVer = def.y / (smallSize / 2)
+                moveHor = def.x / (largeSize - smallSize / 2)
+                moveVer = def.y / (largeSize - smallSize / 2)
+                moveVer *= 1.5;
+                moveHor *= 1.5
                 defControl.x = nowPos.x;
                 defControl.y = nowPos.y;
             }
@@ -357,39 +358,74 @@ function GameRender() {
     //--ボードの生成----------------
 
     //--仮ボードデータ作成
-    var Horizontal = 30;
-    var Vertical = 30;
+    var Horizontal = 15;
+    var Vertical = 15;
 
-    var bord = [...Array(Horizontal).fill([...Array(Vertical).fill(0)])];
+    var bord = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical).fill(0)] })];
     //------------------
 
     var bordAxis = new PIXI.Container(); //ボードを動かすための基点
 
-    var bordSquares = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical)] })];
     var squareWidth = 40;
     var squareHeight = 40;
-    bord.forEach(function(bordLine, index1) {
-        bordLine.forEach(function(square, index2) {
-            //console.log(index1 + " , " + index2);
-            bordSquares[index1][index2] = new PIXI.Graphics();
-            switch (square) {
-                case 0:
-                    //console.log(bordSquares[index1][index2]);
-                    bordSquares[index1][index2].beginFill(0xffffff, 1);
-                    bordSquares[index1][index2].tint = 0xccccccc;
-                    break;
-                case 1:
-                    bordSquares[index1][index2].beginFill(0xccffcc, 1);
-                    break;
-            }
-            bordSquares[index1][index2].lineStyle(2, 0x000000);
-            bordSquares[index1][index2].drawRect(0, 0, squareWidth, squareHeight);
-            bordSquares[index1][index2].endFill();
-            bordSquares[index1][index2].position.x = index1 * squareWidth;
-            bordSquares[index1][index2].position.y = index2 * squareHeight;
-            bordAxis.addChild(bordSquares[index1][index2]);
+    var BordObj = new PIXI.Graphics();
+    var oldBordData = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical).fill(1)] })];
+
+    var bordFirst = true;
+
+    function drawBord() {
+        BordObj.lineStyle(2, 0x000000);
+        bord.forEach(function(bordLine, index1) {
+            bordLine.forEach(function(square, index2) {
+                if (!(
+                        (bordFirst) ||
+                        (oldBordData[index1][index2]) ||
+                        (oldBordData[index1 - 1] && oldBordData[index1 - 1][index2]) ||
+                        (oldBordData[index1 + 1] && oldBordData[index1 + 1][index2]) ||
+                        (oldBordData[index1][index2 + 1]) ||
+                        (oldBordData[index1][index2 - 1]) ||
+                        (oldBordData[index1 - 1] && oldBordData[index1 - 1][index2 + 1]) ||
+                        (oldBordData[index1 - 1] && oldBordData[index1 - 1][index2 - 1]) ||
+                        (oldBordData[index1 + 1] && oldBordData[index1 + 1][index2 + 1]) ||
+                        (oldBordData[index1 + 1] && oldBordData[index1 + 1][index2 - 1])
+                    )) {
+                    return
+                }
+                var globx = BordObj.position.x + squareWidth * index1 + squareWidth / 2 - 5;
+                var globy = BordObj.position.y + squareHeight * index2 + squareHeight / 2 - 5;
+
+                var playerx = width / 2;
+                var playery = height / 2;
+                switch (true) {
+                    case Math.abs(globx - playerx) <= (squareWidth / 2) &&
+                    Math.abs(globy - playery) <= (squareHeight / 2):
+                        bord[index1][index2] = 1;
+                        if (oldBordData[index1][index2] == 0) {
+                            BordObj.beginFill(0xccffcc, 1);
+                        } else {
+                            return;
+                        }
+                        // oldBordData[index1][index2] = 1;
+                        break;
+                    default:
+                        bord[index1][index2] = 0;
+                        if (oldBordData[index1][index2] == 1) {
+                            BordObj.beginFill(0x004400, 1);
+                        } else {
+                            return
+                        }
+                        // oldBordData[index1][index2] = 0;
+                }
+                BordObj.drawRect(index1 * squareWidth, index2 * squareHeight, squareWidth, squareHeight);
+                BordObj.endFill();
+            })
         })
-    })
+        oldBordData = JSON.parse(JSON.stringify(bord));
+    }
+    window.oldBordData = oldBordData
+    stage.addChild(BordObj);
+    drawBord()
+    bordFirst = false
     //----------------------------
 
     //--プレイヤーの生成-----------
@@ -409,128 +445,137 @@ function GameRender() {
     var timeWindow = new PIXI.Graphics();
     var myOcelo = new PIXI.Graphics();
     var itemWindow = new PIXI.Graphics();
-    var menuButton = new PIXI.Graphics();
+    //var menuButton = new PIXI.Graphics();
     var statusWindow = new PIXI.Graphics();
     var map = new PIXI.Graphics();
 
+
     //仮値
-    var myName = "けいとりん"
-    var myColor = 0xffffff;
+    var myName = userName;
+    var myColor = playerColor;
     var timer = 10;
-    var roomName = "アレフワ族の集い"
-    var status = [{name:"エターナルロア", color:0x3333ff, ocelo:5},{name:"けいとりん", color:0xffffff, ocelo:18}]
+    // var roomName
+    var status = roomPlayers.map((p) => { p.ocelo = 0; return p })
+    // [
+    //     { name: "エターナルロア", color: 0x3333ff, ocelo: 5 },
+    //     { name: "けいとりん", color: 0xffffff, ocelo: 18 }
+    // ]
     var statusTextName = [];
     var statusTextOcelo = [];
     //----
-    
+
     //名前とかを乗せるUIの土台
-    UiPanel.lineStyle(2,0xffffff);
+    UiPanel.lineStyle(2, 0xffffff);
     UiPanel.beginFill(0x000000);
-    UiPanel.drawRoundedRect(0,height-60,300,45, 20);
+    UiPanel.drawRoundedRect(0, height - 60, 300, 45, 20);
     UiPanel.endFill();
     UiContainer.addChild(UiPanel);
 
     //プレイヤーネームを乗せるウィンドウ
-    nameWindow.lineStyle(1,0x000000);
-    nameWindow.beginFill(0x0000ff,0.8);
-    nameWindow.drawRoundedRect(0,height-40,300,22,12);
+    nameWindow.lineStyle(1, 0x000000);
+    nameWindow.beginFill(0x0000ff, 0.8);
+    nameWindow.drawRoundedRect(0, height - 40, 300, 22, 12);
     nameWindow.endFill();
     UiPanel.addChild(nameWindow);
-    
+
     //自分のオセロ色、見た目をどうにかしようとして一緒に枠部分も描いてる
-    myOcelo.lineStyle(1,0x0000000);
-    myOcelo.beginFill(0xfffffff,1);
-    myOcelo.drawCircle(25,height-40, 30);
+    myOcelo.lineStyle(1, 0x0000000);
+    myOcelo.beginFill(0xfffffff, 1);
+    myOcelo.drawCircle(25, height - 40, 30);
     myOcelo.endFill();
-    myOcelo.lineStyle(3,0x888888);
-    myOcelo.beginFill(myColor,1);
-    myOcelo.drawCircle(25,height-40, 25);
+    myOcelo.lineStyle(3, 0x888888);
+    myOcelo.beginFill(myColor, 1);
+    myOcelo.drawCircle(25, height - 40, 25);
     myOcelo.endFill();
     UiPanel.addChild(myOcelo);
-    
+
     //制限時間のためのウィンドウ、整数対応か小数対応か分かんなかったのでとりあえず整数で、てゆかたぶん幅的に整数の方がいいと思われ
-    timeWindow.lineStyle(2,0xffffff);
-    timeWindow.beginFill(0x6666ff,0.8);
-    timeWindow.drawRoundedRect(width/2 - 30, 5, 60, 40, 5);
+    timeWindow.lineStyle(2, 0xffffff);
+    timeWindow.beginFill(0x6666ff, 0.8);
+    timeWindow.drawRoundedRect(width - 65, 5, 60, 40, 5);
     timeWindow.endFill();
     UiContainer.addChild(timeWindow);
-    
+
     //アイテムウィンドウ、ボタン機能をあとから追加することになる？
-    itemWindow.lineStyle(2,0xffffff);
-    itemWindow.beginFill(0x000000,0.8);
-    itemWindow.drawRoundedRect(10, height-130, 55,55,15);
+    itemWindow.lineStyle(2, 0xffffff);
+    itemWindow.beginFill(0x000000, 0.8);
+    itemWindow.drawRoundedRect(10, height - 130, 55, 55, 15);
     itemWindow.endFill();
     UiContainer.addChild(itemWindow);
-    
+
     //メニューボタン(仮)、とりあえず置いてみたけどメニュー開く必要あるのだろうか。
-    menuButton.lineStyle(2,0xffffff);
-    menuButton.beginFill(0xdddddd);
-    menuButton.drawRoundedRect(width - 120, 7, 100, 35, 10);
-    menuButton.endFill();
-    UiContainer.addChild(menuButton);
-    
+    // menuButton.lineStyle(2, 0xffffff);
+    // menuButton.beginFill(0xdddddd);
+    // menuButton.drawRoundedRect(width - 120, 7, 100, 35, 10);
+    // menuButton.endFill();
+    // UiContainer.addChild(menuButton);
+
+    var statusWidth = (width/2 < 200) ? width/2 : 200;
+    var statusHeight = 10 + status.length * 15;
+
     //プレイヤーたちのオセロ数を表示するための枠、プレイヤーの色によっては正直見づらくなる。
-    statusWindow.lineStyle(1,0xffffff,0.6);
-    statusWindow.beginFill(0x000000,0.6);
-    statusWindow.drawRoundedRect(5,5,140,160,10);
+    statusWindow.lineStyle(1, 0xffffff, 0.6);
+    statusWindow.beginFill(0x000000, 0.6);
+    //statusWindow.drawRoundedRect(5, 5, 140, 160, 10);
+    statusWindow.drawRoundedRect(5,5, statusWidth, statusHeight, 10);
     statusWindow.endFill();
     UiContainer.addChild(statusWindow);
 
     //マップ、の枠部分、未完成。map.renderableをtrueにすると出現するようになる。
-    map.lineStyle(3,0x000000);
+    map.lineStyle(3, 0x000000);
     map.beginFill(0xffff00, 0.6);
-    map.drawCircle(width-60, height-60, 80);
+    map.drawCircle(width - 60, height - 60, 80);
     map.endFill();
     map.lineStyle(0);
     map.beginFill(0x000000, 0.8);
-    map.drawCircle(width-60, height-60, 70);
+    map.drawCircle(width - 60, height - 60, 70);
     map.endFill();
     UiContainer.addChild(map);
     map.renderable = false;
 
 
-    var nameText = new PIXI.Text(myName, {font:'bold 12pt Arial', fill:'white'});
-    var timeText = new PIXI.Text(timer, {font:'bold 25pt Arial', fill:'white'});
-    var roomText = new PIXI.Text("部屋名 : " + roomName, {font:'bold 10pt Arial', fill:'white'});
-    var itemText = new PIXI.Text("ITEM", {font:'bold 12pt Arial', fill:'white'});
-    var menuText = new PIXI.Text("MENU", {font:'bold 12pt Arial', fill:0x888888});
+    var nameText = new PIXI.Text(myName, { font: 'bold 12pt Arial', fill: 'white' });
+    var timeText = new PIXI.Text(timer, { font: 'bold 25pt Arial', fill: 'white' });
+    var roomText = new PIXI.Text("部屋名 : " + roomName, { font: 'bold 10pt Arial', fill: 'white' });
+    var itemText = new PIXI.Text("ITEM", { font: 'bold 12pt Arial', fill: 'white' });
+    //var menuText = new PIXI.Text("MENU", { font: 'bold 12pt Arial', fill: 0x888888 });
 
     //プレイヤーネームのテキスト
     nameText.position.x = 60;
-    nameText.position.y = height-37;
+    nameText.position.y = height - 37;
     nameWindow.addChild(nameText);
-    
+
     //制限時間のテキスト
-    timeText.position.x = width/2 - 20;
+    timeText.position.x = width - 55;
     timeText.position.y = 7;
     timeWindow.addChild(timeText);
-    
+
     //部屋名のテキスト
     roomText.position.x = 55;
-    roomText.position.y = height-55;
+    roomText.position.y = height - 55;
     UiPanel.addChild(roomText);
-    
+
     //ITEMの文字
     itemText.position.x = 19;
-    itemText.position.y = height-150;
+    itemText.position.y = height - 150;
     itemWindow.addChild(itemText);
 
     //MENUの文字
-    menuText.position.x = width - 95;
-    menuText.position.y = 15;
-    menuButton.addChild(menuText);
+    // menuText.position.x = width - 95;
+    // menuText.position.y = 15;
+    // menuButton.addChild(menuText);
 
     //全プレイヤーの名前とオセロ数のテキスト、とりあえず連想配列の入った配列使ってるけどあくまでその場しのぎです。
-    status.forEach(function(player, index){
-        statusTextName[index] = new PIXI.Text("●"+player.name, {font:'bold 8pt Arial', fill:player.color});
-        statusTextOcelo[index] = new PIXI.Text(("0".repeat(3)+player.ocelo).slice(-3), {font:'bold 8pt Arial', fill:'white'});
+    status.forEach(function(player, index) {
+        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold '+8+'pt Arial', fill: player.color });
+        statusTextOcelo[index] = new PIXI.Text(("0".repeat(3) + player.ocelo).slice(-3), { font: 'bold 8pt Arial', fill: 'white' });
         statusTextName[index].position.x = 15;
-        statusTextName[index].position.y = 15 + index*20;
-        statusTextOcelo[index].position.x = 120;
-        statusTextOcelo[index].position.y = 15 + index*20;
+        statusTextName[index].position.y = 15 + index * 15;
+        statusTextOcelo[index].position.x = statusWidth - 25;
+        statusTextOcelo[index].position.y = 15 + index * 15;
         statusWindow.addChild(statusTextName[index]);
         statusWindow.addChild(statusTextOcelo[index]);
-    })   
+    })
     //--------------------------------- 
 
     // オブジェクトをステージに乗せる
@@ -543,56 +588,28 @@ function GameRender() {
 
     // アニメーション関数を定義する
     // setInterval(()=>console.log(bordSquares[1][2].x),1000);
+    var sendPosDirty = false;
+
     function animate() {
 
         requestAnimationFrame(animate); // 次の描画タイミングでanimateを呼び出す
         //bordSquares[5][0].position.x += 1;
-        bordAxis.position.x += moveHor * 3;
-        bordAxis.position.y += moveVer * 3;
+        BordObj.position.x += moveHor * 5;
+        BordObj.position.y += moveVer * 5;
 
-        if (moveHor!=0||moveVer!=0) {
+        if ((moveHor != 0 || moveVer != 0) && !sendPosDirty) {
             socket.emit('changePos', {
                 playerId: playerId,
                 roomId: roomId,
                 pos: {
-                    x: width / 2 - bordAxis.position.x,
-                    y: height / 2 - bordAxis.position.y
+                    x: width / 2 - BordObj.position.x,
+                    y: height / 2 - BordObj.position.y
                 }
             })
+            sendPosDirty = true;
+            setTimeout(() => sendPosDirty = false, 500)
         }
-
-        bord.forEach(function(bordLine, index1) {
-            bord.forEach(function(square, index2) {
-                var globx = bordSquares[index1][index2].position.x + bordAxis.position.x + squareWidth / 2;
-                var globy = bordSquares[index1][index2].position.y + bordAxis.position.y + squareHeight / 2;
-
-                var playerx = width / 2;
-                var playery = height / 2;
-
-
-                switch (true) {
-                    case Math.abs(globx - playerx) <= (squareWidth / 2) &&
-                    Math.abs(globy - playery) <= (squareHeight / 2):
-                        // console.log("にょ");
-                        bord[index1][index2] = 1;
-                        break;
-                    default:
-                        bord[index1][index2] = 0;
-                }
-                switch (bord[index1][index2]) {
-                    case 0:
-                        bordSquares[index1][index2].tint = 0x55cc55;
-                        break;
-                    case 1:
-                        bordSquares[index1][index2].tint = 0xccffcc;
-                        //console.log(bordSquares[index1][index2].tint)
-                        break;
-                    default:
-                        bordSquares[index1][index2].tint = 0x555555;
-                        console.log("zoba")
-                }
-            })
-        })
+        drawBord()
         renderer.render(stage); // 描画する
 
     }
