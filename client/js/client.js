@@ -257,12 +257,14 @@ function RoomsRender() {
             }
             scrollPIXI.bar.y = pos.y;
             index = parseInt(e.data.global.y/(height / rooms.length));
+            index==rooms.length?index--:'';
             roomUIs.forEach((ui,i)=>{
                 ui.y = i * ui.height - index*ui.height
             })
         }
         function end() {
             index = parseInt(e.data.global.y/(height / rooms.length));
+            index==rooms.length?index--:'';
             roomUIs.forEach((ui,i)=>{
                 ui.y = i * ui.height - index*ui.height
             })
@@ -279,7 +281,7 @@ function RoomsRender() {
         }
         stage.on('touchmove', move);
         stage.on('touchend', end);
-        move();
+        move(e);
     })
 
     ;stage.addChild(scrollPIXI.bar)
@@ -298,19 +300,26 @@ function RoomsRender() {
     ;stage.addChild(newRoomButton)
 
     ;newRoomButton.interactive = true;
-    ;newRoomButton.once('touchstart mousedown',()=>{
+    ;function createNewRoom(){
         ;console.log("ねこ")
-        (()=>{
+        ;(()=>{
             ;var basediv = document.createElement('div');
             ;basediv.id = "createRoomDiv"
             ;var roomNameLabel = document.createElement('div');
-            ;roomNameLabel.innerText = "ルーム名";
-            ;var roomNameInput = document.createElement('input');
-            ;basediv.appendChild(roomNameLabel);
-            ;basediv.appendChild(roomNameInput);
+            ;roomNameLabel.innerText = "ルーム名"
+            ;var roomNameInput = document.createElement('input')
+            ;roomNameInput.classList.add('newRoomInput')
+            ;roomNameInput.maxLength = 16;
+            ;basediv.appendChild(roomNameLabel)
+            ;basediv.appendChild(roomNameInput)
+
+            ;var isHideLabel = document.createElement('div');
+            ;isHideLabel.inner
             ;document.body.appendChild(basediv)
         })()
-    })
+    }
+    ;newRoomButton.once('touchstart',createNewRoom);
+    ;newRoomButton.once('mousedown',createNewRoom);
 
     renderer.render(stage);
     (function animate() {
