@@ -11,8 +11,6 @@ var getDevice = (function() {
         return 'other';
     }
 })();
-var width = document.getElementById('pixiview').offsetWidth
-var height = document.getElementById('pixiview').offsetHeight
 if (getDevice != 'other') {
     width = window.innerWidth;
     height = window.innerHeight;
@@ -42,8 +40,8 @@ var roomPlayers;
     })
 })
 
-width = 320;
-height = 480;
+// width = 320;
+// height = 480;
 
 
 
@@ -125,6 +123,9 @@ function LoginRender() {
 }
 
 function RoomsRender() {
+    var ignoreflag = false;
+    var rooms;
+    var roomUIs = [];
     function createRoomPIXI(obj) {
         var ret = new PIXI.Container();
         var box = new PIXI.Graphics();
@@ -139,6 +140,8 @@ function RoomsRender() {
 
         function tevnt() {
             if (obj.isStarted) { return }
+            if(ignoreflag){return}
+            ignoreflag = true;
             var clearCount = 40;
             var count = 0;
             stage.children.forEach((e) => {
@@ -165,7 +168,6 @@ function RoomsRender() {
                                 color: p.color
                             }
                         })
-                        console.log(roomPlayers)
                         RoomStatusRender();
                     })
                 }
@@ -190,9 +192,9 @@ function RoomsRender() {
         var indexy = 10 + NameLabel.height + 5;
         obj.players.some((player) => {
             var label = new PIXI.Text(player.name, {
-                font: "18px Arial",
+                font: "14px Arial",
                 fill: player.color,
-                strokeThickness: 'http://ocelot.cloudno.de'
+                strokeThickness: 1
             })
             label.x = indexx;
             label.y = indexy;
@@ -202,11 +204,10 @@ function RoomsRender() {
                 indexy += label.height + 2;
                 indexx = width / 4 + 10;
             }
-            if (indexy >= box.height) {
+            if (indexy+10 >= box.height) {
                 return true;
             }
         })
-
         return ret;
     }
     socket.once('returnRooms', (data) => {
@@ -214,9 +215,103 @@ function RoomsRender() {
             var tmp = createRoomPIXI(d);
             tmp.y = i * tmp.height;
             stage.addChild(tmp);
+            roomUIs.push(tmp)
         })
+        rooms = data;
     })
     socket.emit('getRooms');
+
+    var scrollPIXI = {
+        base: new PIXI.Graphics(),
+        bar: new PIXI.Graphics()
+    }
+
+    scrollPIXI.base.lineStyle(2, 0xffffff);
+
+    scrollPIXI.base.drawRoundedRect(width * 0.05, height * 0.1, width * 0.01, height * 0.8, 5);
+
+    var index = 0;
+    scrollPIXI.bar.lineStyle(2, 0x0000000);
+    scrollPIXI.bar.beginFill(0xfffffff, 0.6);
+    scrollPIXI.bar.drawCircle(0, 0 , 30);
+    scrollPIXI.bar.x = (width * 0.05)+width * 0.01/2;
+    scrollPIXI.bar.y = height * 0.1;
+    scrollPIXI.bar.endFill();
+
+    stage.interactive = true;
+    stage.once('touchstart', function start(e) {
+        if(e.data.global.x>scrollPIXI.bar.x + scrollPIXI.bar.width){
+            stage.once('touchstart', start);
+            return
+        }
+        function move(e) {
+            var pos = {
+                x: e.data.global.x,
+                y: e.data.global.y
+            }
+            if(pos.y < height*0.1){
+                pos.y = height*0.1;
+            }
+            if(pos.y > height*0.9){
+                pos.y = height*0.9
+            }
+            scrollPIXI.bar.y = pos.y;
+            index = parseInt(e.data.global.y/(height / rooms.length));
+            roomUIs.forEach((ui,i)=>{
+                ui.y = i * ui.height - index*ui.height
+            })
+        }
+        function end() {
+            index = parseInt(e.data.global.y/(height / rooms.length));
+            roomUIs.forEach((ui,i)=>{
+                ui.y = i * ui.height - index*ui.height
+            })
+            scrollPIXI.bar.y = (height / rooms.length) * index;
+            if(scrollPIXI.bar.y < height*0.1){
+                scrollPIXI.bar.y = height*0.1;
+            }
+            if(scrollPIXI.bar.y > height*0.9){
+                scrollPIXI.bar.y = height*0.9
+            }
+            stage.off('touchmove', move);
+            stage.off('touchend', end);
+            stage.once('touchstart', start);
+        }
+        stage.on('touchmove', move);
+        stage.on('touchend', end);
+        move();
+    })
+
+    ;stage.addChild(scrollPIXI.bar)
+    ;stage.addChild(scrollPIXI.base)
+
+    ;var newRoomLabel = new PIXI.Text("新規ルームの作成",{ fontSize: "45pt", fill: "#ffffff" });
+    ;var newRoomButton = new PIXI.Graphics();
+    ;newRoomButton.lineStyle(2, 0xffffff);
+    ;newRoomButton.beginFill(0xfffffff, 0.6);
+    ;newRoomButton.drawRect(0,0,width / 4 * 3 - 5, newRoomLabel.height);
+    ;newRoomButton.y = height*0.9
+    ;newRoomButton.x = width/4
+    ;newRoomLabel.x = (newRoomButton.width - newRoomLabel.width)/2
+
+    ;newRoomButton.addChild(newRoomLabel);
+    ;stage.addChild(newRoomButton)
+
+    ;newRoomButton.interactive = true;
+    ;newRoomButton.once('touchstart mousedown',()=>{
+        ;console.log("ねこ")
+        (()=>{
+            ;var basediv = document.createElement('div');
+            ;basediv.id = "createRoomDiv"
+            ;var roomNameLabel = document.createElement('div');
+            ;roomNameLabel.innerText = "ルーム名";
+            ;var roomNameInput = document.createElement('input');
+            ;basediv.appendChild(roomNameLabel);
+            ;basediv.appendChild(roomNameInput);
+            ;document.body.appendChild(basediv)
+        })()
+    })
+
     renderer.render(stage);
     (function animate() {
         renderer.render(stage);
@@ -265,20 +360,20 @@ function GameRender() {
         moveHor = 0;
         moveVer = 0;
         Object.keys(e).forEach((label) => {
-            if(!e[label]){return}
+            if (!e[label]) { return }
             switch (label) {
                 case 'left':
                     moveHor++;
-                break;
+                    break;
                 case 'right':
                     moveHor--;
-                break;
+                    break;
                 case 'up':
                     moveVer++;
-                break;
+                    break;
                 case 'down':
                     moveVer--;
-                break;
+                    break;
             }
         })
     }
@@ -510,14 +605,14 @@ function GameRender() {
     // menuButton.endFill();
     // UiContainer.addChild(menuButton);
 
-    var statusWidth = (width/2 < 200) ? width/2 : 200;
+    var statusWidth = (width / 2 < 200) ? width / 2 : 200;
     var statusHeight = 10 + status.length * 15;
 
     //プレイヤーたちのオセロ数を表示するための枠、プレイヤーの色によっては正直見づらくなる。
     statusWindow.lineStyle(1, 0xffffff, 0.6);
     statusWindow.beginFill(0x000000, 0.6);
     //statusWindow.drawRoundedRect(5, 5, 140, 160, 10);
-    statusWindow.drawRoundedRect(5,5, statusWidth, statusHeight, 10);
+    statusWindow.drawRoundedRect(5, 5, statusWidth, statusHeight, 10);
     statusWindow.endFill();
     UiContainer.addChild(statusWindow);
 
@@ -567,7 +662,7 @@ function GameRender() {
 
     //全プレイヤーの名前とオセロ数のテキスト、とりあえず連想配列の入った配列使ってるけどあくまでその場しのぎです。
     status.forEach(function(player, index) {
-        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold '+8+'pt Arial', fill: player.color });
+        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold ' + 8 + 'pt Arial', fill: player.color });
         statusTextOcelo[index] = new PIXI.Text(("0".repeat(3) + player.ocelo).slice(-3), { font: 'bold 8pt Arial', fill: 'white' });
         statusTextName[index].position.x = 15;
         statusTextName[index].position.y = 15 + index * 15;
