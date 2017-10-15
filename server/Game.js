@@ -17,10 +17,6 @@ module.exports = Game = function(option) {
 }
 
 Game.prototype.addPlayer = function(player) {
-    while (this.players.find((p) => {
-            return p.color === player.color;
-        }))
-        player.color = Math.floor(Math.random() * 0xffffff);
     this.players.push(player);
     return player
 };

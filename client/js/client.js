@@ -95,7 +95,8 @@ function LoginRender() {
     }
 
     function pushCreateUser() {
-        socket = io('http://ocelot.cloudno.de');
+        var isDebug = true;
+        socket = io(isDebug ? 'http://localhost':'http://ocelot.cloudno.de');
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
             input.readOnly = "true";
@@ -192,7 +193,7 @@ function RoomsRender() {
         var indexy = 10 + NameLabel.height + 5;
         obj.players.some((player) => {
             var label = new PIXI.Text(player.name, {
-                font: "14px Arial",
+                font: "3vw Arial",
                 fill: player.color,
                 strokeThickness: 1
             })
@@ -287,7 +288,7 @@ function RoomsRender() {
     ;stage.addChild(scrollPIXI.bar)
     ;stage.addChild(scrollPIXI.base)
 
-    ;var newRoomLabel = new PIXI.Text("新規ルームの作成",{ fontSize: "45pt", fill: "#ffffff" });
+    ;var newRoomLabel = new PIXI.Text("新規ルームの作成",{ font: "8vw Arial", fill: "#ffffff" });
     ;var newRoomButton = new PIXI.Graphics();
     ;newRoomButton.lineStyle(2, 0xffffff);
     ;newRoomButton.beginFill(0xfffffff, 0.6);
@@ -301,20 +302,79 @@ function RoomsRender() {
 
     ;newRoomButton.interactive = true;
     ;function createNewRoom(){
-        ;console.log("ねこ")
         ;(()=>{
             ;var basediv = document.createElement('div');
             ;basediv.id = "createRoomDiv"
             ;var roomNameLabel = document.createElement('div');
             ;roomNameLabel.innerText = "ルーム名"
+            ;roomNameLabel.classList.add('label')
             ;var roomNameInput = document.createElement('input')
             ;roomNameInput.classList.add('newRoomInput')
             ;roomNameInput.maxLength = 16;
-            ;basediv.appendChild(roomNameLabel)
-            ;basediv.appendChild(roomNameInput)
+            ;var roomNameInputWrap = document.createElement('div')
+            ;roomNameInputWrap.classList.add('wrapper');
+            ;roomNameInputWrap.appendChild(roomNameInput)
 
-            ;var isHideLabel = document.createElement('div');
-            ;isHideLabel.inner
+            ;basediv.appendChild(roomNameLabel)
+            ;basediv.appendChild(roomNameInputWrap)
+
+            ;var isHideCheck = document.createElement('input');
+            ;isHideCheck.type = "checkbox"
+            ;isHideCheck.id = "isHideCheck"
+            ;isHideCheck.style["webkitAppearance"] = 'checkbox'
+
+            ;var isHideLabel = document.createElement('label');
+            ;isHideLabel.classList.add('label')
+            ;isHideLabel.htmlFor = "isHideCheck"
+            ;isHideLabel.innerText = "ルーム一覧に表示するか？"
+
+            ;basediv.appendChild(isHideCheck)
+            ;basediv.appendChild(isHideLabel)
+
+            ;var createButton = document.createElement('input');
+            ;createButton.value = "ルーム作成"
+            ;createButton.type = "button"
+            ;createButton.onclick = e=>{
+                createButton.onclick = null;
+                var obj = {
+                    name:roomNameInput.value,
+                    createBy:playerId,
+                    option:{
+                        hidden:isHideCheck.checked
+                    }
+                }
+                socket.emit('createRoom',obj);
+                socket.once('returnRoom',(e)=>{
+                    roomId = e
+                    roomName = roomNameInput.value
+                    socket.emit('joinRoom', {
+                        room: roomId,
+                        player: playerId
+                    })
+                    socket.once('joinedRoom', () => {
+                        roomPlayers = [{
+                                id: playerId,
+                                name: userName,
+                                color: playerColor
+                            }]
+                        while (stage.children[0]) { stage.removeChild(stage.children[0]); }
+                        RoomStatusRender();
+                    })
+                    ;document.body.removeChild(basediv)
+                })
+            }
+            ;var closeButton = document.createElement('input')
+            ;closeButton.value = "閉じる"
+            ;closeButton.type = "button"
+            ;closeButton.onclick = e=>{
+                ;document.body.removeChild(basediv)
+                ;newRoomButton.once('touchstart',createNewRoom)
+                ;newRoomButton.once('mousedown',createNewRoom)
+            }
+
+            ;basediv.appendChild(createButton)
+            ;basediv.appendChild(closeButton)
+
             ;document.body.appendChild(basediv)
         })()
     }

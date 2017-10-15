@@ -1,37 +1,67 @@
-input{
+input {
     -webkit-appearance: none;
     border: none;
     outline: 0px;
-    position: absolute;
     background-color: #0f0f0f;
-    color:white;
+    color: white;
     text-align: center;
     font-size: 34px;
 }
-#nameInput{
+
+input[type=checkbox] {
+    width: 24px;
+    height: 24px;
+    -moz-transform: scale(1.4);
+    -webkit-transform: scale(1.4);
+    transform: scale(1.4);
+    margin: 2vw;
+}
+
+input[type=button]{
+    margin: 2vw;
+}
+
+#nameInput {
     width: 230px;
     top: 228px;
     left: 62px;
-}
-body{
-	margin: 0px;
-}
-#pixiview{
-	width: 100%;
-	height: 100%;
-	position: fixed;
-}
-#createRoomDiv{
-    background-color: #cccccc;
-    width:80%;
-    height:80%;
-    left:10%;
-    top:10%;
     position: absolute;
-    font-size: 2.5em;
 }
-.newRoomInput{
-    font-size: 50%;
-    left:5%;
+
+body {
+    margin: 0px;
+}
+
+#pixiview {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+}
+
+#createRoomDiv {
+    background-color: #cccccc;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    top: 10%;
+    position: absolute;
+    font-size: 5vh;
+    border: 2px solid green;
+}
+
+.label {
+    margin: 1%;
+}
+
+.newRoomInput {
+    font-size: 6vh;
+    margin: 0 auto;
     width: 90%;
 }
+
+.wrapper {
+    text-align: center;
+}
+
+
+/*8Ak4g52Y*/

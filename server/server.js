@@ -99,6 +99,7 @@ io.on('connection', (socket) => {
     //	}
     //}
     socket.on('createRoom', (data) => {
+        console.log(data)
         var room = new Room({
             name: data.name, //ルーム名
             createBy: Players[data.createBy], //作成者のPlayerインスタンス
