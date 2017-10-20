@@ -95,7 +95,7 @@ function LoginRender() {
     }
 
     function pushCreateUser() {
-        var isDebug = true;
+        var isDebug = false;
         socket = io(isDebug ? 'http://localhost':'http://ocelot.cloudno.de');
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
@@ -530,8 +530,8 @@ function GameRender() {
 
     var bordAxis = new PIXI.Container(); //ボードを動かすための基点
 
-    var squareWidth = 40;
-    var squareHeight = 40;
+    var squareHeight = height/10;
+    var squareWidth = squareHeight;
     var BordObj = new PIXI.Graphics();
     var oldBordData = [...Array(Horizontal).fill(0).map(() => { return [...Array(Vertical).fill(1)] })];
 
@@ -620,6 +620,7 @@ function GameRender() {
     var timer = 10;
     // var roomName
     var status = roomPlayers.map((p) => { p.ocelo = 0; return p })
+    status.splice(8,10);
     // [
     //     { name: "エターナルロア", color: 0x3333ff, ocelo: 5 },
     //     { name: "けいとりん", color: 0xffffff, ocelo: 18 }
@@ -674,8 +675,10 @@ function GameRender() {
     // menuButton.endFill();
     // UiContainer.addChild(menuButton);
 
-    var statusWidth = (width / 2 < 200) ? width / 2 : 200;
-    var statusHeight = 10 + status.length * 15;
+    var statusWidth = (width / 2 < 300) ? width / 2 : 300;
+    //var statusHeight = 10 + status.length * 15;
+    var statusHeight = (height / 3 < 200) ? height / 3 : 200;
+    //var statusHeight = height / 3;
 
     //プレイヤーたちのオセロ数を表示するための枠、プレイヤーの色によっては正直見づらくなる。
     statusWindow.lineStyle(1, 0xffffff, 0.6);
@@ -731,12 +734,12 @@ function GameRender() {
 
     //全プレイヤーの名前とオセロ数のテキスト、とりあえず連想配列の入った配列使ってるけどあくまでその場しのぎです。
     status.forEach(function(player, index) {
-        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold ' + 8 + 'pt Arial', fill: player.color });
-        statusTextOcelo[index] = new PIXI.Text(("0".repeat(3) + player.ocelo).slice(-3), { font: 'bold 8pt Arial', fill: 'white' });
+        statusTextName[index] = new PIXI.Text("●" + player.name, { font: 'bold ' + statusHeight / 18 + 'pt Arial', fill: player.color });
+        statusTextOcelo[index] = new PIXI.Text(("0".repeat(3) + player.ocelo).slice(-3), { font: 'bold ' + statusHeight / 18 +'pt Arial', fill: 'white' });
         statusTextName[index].position.x = 15;
-        statusTextName[index].position.y = 15 + index * 15;
+        statusTextName[index].position.y = (index + 1) * (statusHeight - 25) / 8;
         statusTextOcelo[index].position.x = statusWidth - 25;
-        statusTextOcelo[index].position.y = 15 + index * 15;
+        statusTextOcelo[index].position.y = (index + 1) * (statusHeight - 25) / 8;
         statusWindow.addChild(statusTextName[index]);
         statusWindow.addChild(statusTextOcelo[index]);
     })
