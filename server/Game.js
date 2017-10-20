@@ -4,7 +4,7 @@ module.exports = Game = function(option) {
     option = option || {};
     this.option = option;
     var define = {
-        emitter: null
+        emitter: []
     }
 
     Object.keys(define).forEach((key) => {
@@ -18,6 +18,7 @@ module.exports = Game = function(option) {
 
 Game.prototype.addPlayer = function(player) {
     this.players.push(player);
+    console.log("Player : Add Player "+player.name)
     return player
 };
 
@@ -29,21 +30,46 @@ Game.prototype.GameStart = function() {
     if (this.status !== "wait") { return false; }
     if (this.players.length === 0) { return false; }
 
-    emitter.on('setPos', (e) => this.setPos(e))
-    emitter.on('setOthello', (e) => this.setOthello(e))
+    this.onPlayers('setPos', (e) => this.setPos(e))
+    this.onPlayers('setOthello', (e) => this.setOthello(e))
 
-    this.emitter = emitter;
-    return emitter;
 }
 
 
 Game.prototype.setPos = function(e) {
-    this.players[this.players.findIndex((d)=>{
-		return d.id === e.playerId
-	})].pos = e.pos;
-    this.emitter.emit('changePos',{
-		player:e.playerId,
-		pos:e.pos
+    this.players[this.players.findIndex((d) => {
+        return d.id === e.playerId
+    })].pos = e.pos;
+    this.emitPlayers('changePos', {
+        player: e.playerId,
+        pos: e.pos
+    })
+}
+
+Game.prototype.emitPlayers = function(event, data) {
+    this.players.forEach(p => {
+        p.socket.emit(event, data)
+    })
+}
+
+Game.prototype.toObject = function() {
+    return {
+        status:this.status = 'wait',
+        bord:this.bord,
+        players:this.players.map((p)=>{return p.toObject()}),
+        bordSize:this.bordSize
+    }
+}
+
+Game.prototype.onPlayers = function(event, fn) {
+    this.players.forEach(p => {
+        p.socket.on(event, fn)
+    })
+}
+
+Game.prototype.oncePlayers = function(event, fn) {
+    this.players.forEach(p => {
+        p.socket.once(event, fn)
     })
 }
 
@@ -56,7 +82,7 @@ Game.prototype.setOthello = function(e) {
             color: e.color,
             bordSize: this.bordSize
         })) {
-        this.emitter.emit('reverse', this);
+        emitPlayers('reverse', this)
     }
 }
 

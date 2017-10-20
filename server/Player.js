@@ -16,12 +16,22 @@ module.exports = function Player(option){
 			x:0,
 			y:0
 		},
-		id:getUniqueStr()
+		id:getUniqueStr(),
+		socket:null
 	}
 
 	Object.keys(define).forEach((key)=>{
 		this[key] = this.option[key]||define[key];
 	})
+}
+
+module.exports.prototype.toObject = function(){
+	return {
+		color:this.color,
+		name:this.name,
+		pos:this.pos,
+		id:this.id,
+	}
 }
 
 function getUniqueStr(myStrong) {

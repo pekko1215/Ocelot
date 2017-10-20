@@ -19,7 +19,19 @@ module.exports = Room = function Room(option) {
 
 Room.prototype.setGame = function(game){
 	this.game = game;
-    this.game.addPlayer(this.createBy)
+}
+
+Room.prototype.toObject = function(){
+    return {
+        id:this.id,
+        name:this.name,
+        createBy:this.createBy.toObject(),
+        isStarted:this.isStarted,
+        game:this.game.toObject(),
+        players:this.game.players.map((p)=>{
+            return p.toObject()
+        })
+    }
 }
 
 function getUniqueStr(myStrong) {
