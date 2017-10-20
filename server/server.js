@@ -70,7 +70,6 @@ io.on('connection', (socket) => {
                 players: room.game.toObject().players
             }
         })
-        console.log(arr);
         socket.emit('returnRooms', arr);
     })
 
@@ -121,13 +120,11 @@ io.on('connection', (socket) => {
     socket.on('joinRoom', (data) => {
         Rooms[data.room].game.addPlayer(Players[data.player]);
         console.log(`Join Room ${Players[data.player].name} to ${Rooms[data.room].name}`)
-        console.log(Rooms[data.room].toObject())
         socket.emit('joinedRoom',Rooms[data.room].toObject())
     })
 
-    socket.on('fire',(data)=>{
-        console.log(Rooms[data].game)
-        socket.emit('returnFire',Rooms[data].game.toObject());
+    socket.on('fire',(roomId)=>{
+        socket.emit('returnFire',Rooms[roomId].game.toObject());
     })
 
     socket.on('getRoom',(roomId)=>{
@@ -135,7 +132,6 @@ io.on('connection', (socket) => {
     })
 
     socket.on('gameStart',(roomId)=>{
-        console.log(Rooms[roomId]);
         Rooms[roomId].game.GameStart();
         socket.emit('returnGameStart',Rooms[roomId].game.toObject());
     })

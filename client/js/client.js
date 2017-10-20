@@ -97,7 +97,7 @@ function LoginRender() {
 
     function pushCreateUser() {
         var isDebug = true;
-        socket = io(isDebug ? 'http://localhost':'http://ocelot.cloudno.de');
+        socket = io(isDebug ? 'http://133.92.145.232':'http://ocelot.cloudno.de');
 
         socket.returnSocket = (ev,prm)=>{
             return new Promise((resolve,reject)=>{
@@ -596,8 +596,6 @@ function GameRender() {
     stage.addChild(BordObj);
     drawBord()
     bordFirst = false
-    //----------------------------
-
     //--プレイヤーの生成-----------
     var PlayerPoint = new PIXI.Graphics();
     PlayerPoint.lineStyle(0);
@@ -607,21 +605,20 @@ function GameRender() {
 
     //--他のプレイヤーの生成--------
     var otherPlayerContainer = new PIXI.Container();
-    var otherPlayerPoint = roomPlayers.map((p)=>{
+    BordObj.addChild(otherPlayerContainer);
+    var otherPlayerPoint = roomPlayers.filter((p)=>{return p.id!=playerId}).map((p)=>{
         var Point = new PIXI.Graphics();
-        console.log(p)
         Point.lineStyle(0);
         Point.beginFill(p.color, 1);
         Point.drawCircle(0,0, 10);
         Point.position = {
-            x:p.pos.x - BordObj.position.x,
-            y:p.pos.y - BordObj.position.y,
+            x:p.pos.x,
+            y:p.pos.y,
         };
         Point.endFill();
         otherPlayerContainer.addChild(Point);
         return Point
     })
-    stage.addChild(otherPlayerContainer);
     console.log(otherPlayerPoint)
 
     //ｰｰパネル作成-----------------
@@ -777,6 +774,33 @@ function GameRender() {
     var sendPosDirty = false;
     var fireCounter = 0;
 
+    //----------------------------
+    function fire(){
+        socket.returnSocket("fire",roomId).then((game)=>{
+            Game = game;
+            roomPlayers = game.players;
+        })
+    }
+    function moveOtherPlayer(obj){
+        var i = roomPlayers.filter((p)=>{return p.id!=playerId}).findIndex((p)=>{
+            return p.id === obj.player;
+        });
+        roomPlayers.filter((p)=>{return p.id!=playerId})[i].position = {
+            x:obj.pos.x,
+            y:obj.pos.y
+        }
+    }
+    function drawPlayers(){
+        roomPlayers.filter((p)=>{return p.id!=playerId}).forEach((p,i)=>{
+            otherPlayerPoint[i].position = {
+                x:p.pos.x,
+                y:p.pos.y
+            }
+        })
+    }
+
+    var firetimer = 0;
+
     function animate() {
 
         requestAnimationFrame(animate); // 次の描画タイミングでanimateを呼び出す
@@ -794,9 +818,15 @@ function GameRender() {
                 }
             })
             sendPosDirty = true;
-            setTimeout(() => sendPosDirty = false, 500)
+            setTimeout(() => sendPosDirty = false, 20)
         }
         drawBord()
+        drawPlayers();
+        if(firetimer>50){
+            fire();
+        }else{
+            firetimer++;
+        }
         renderer.render(stage); // 描画する
 
     }
