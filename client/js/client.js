@@ -22,6 +22,7 @@ var roomId;
 var roomName;
 var playerColor;
 var roomPlayers;
+var Game;
 
 ["resize", "orientationchange"].forEach((ev) => {
     window.addEventListener(ev, () => {
@@ -97,6 +98,14 @@ function LoginRender() {
     function pushCreateUser() {
         var isDebug = true;
         socket = io(isDebug ? 'http://localhost':'http://ocelot.cloudno.de');
+
+        socket.returnSocket = (ev,prm)=>{
+            return new Promise((resolve,reject)=>{
+                socket.once("return"+ev.split('').map((k,i)=>{return i?k:k.toLocaleUpperCase()}).join(''),resolve);
+                socket.emit(ev,prm);
+            })
+        }
+
         input.onkeypress = null;
         socket.once('returnPlayer', (e) => {
             input.readOnly = "true";
@@ -159,16 +168,10 @@ function RoomsRender() {
                         room: roomId = obj.id,
                         player: playerId
                     })
-                    socket.once('joinedRoom', () => {
+                    socket.once('joinedRoom', (obj) => {
                         roomId = obj.id;
                         roomName = obj.name
-                        roomPlayers = obj.players.map((p) => {
-                            return {
-                                id: p.id,
-                                name: p.name,
-                                color: p.color
-                            }
-                        })
+                        roomPlayers = obj.game.players
                         RoomStatusRender();
                     })
                 }
@@ -351,12 +354,8 @@ function RoomsRender() {
                         room: roomId,
                         player: playerId
                     })
-                    socket.once('joinedRoom', () => {
-                        roomPlayers = [{
-                                id: playerId,
-                                name: userName,
-                                color: playerColor
-                            }]
+                    socket.once('joinedRoom', (obj) => {
+                        roomPlayers = [obj.createBy]
                         while (stage.children[0]) { stage.removeChild(stage.children[0]); }
                         RoomStatusRender();
                     })
@@ -389,7 +388,14 @@ function RoomsRender() {
 }
 
 function RoomStatusRender() {
-    GameRender()
+    function Start(){
+        socket.emit('gameStart',roomId);
+        socket.once('returnGameStart',(e)=>{
+            Game = e;
+            GameRender()
+        })
+    }
+    Start();
 }
 
 LoginRender();
@@ -599,8 +605,24 @@ function GameRender() {
     PlayerPoint.drawCircle(width / 2, height / 2, 10);
     PlayerPoint.endFill();
 
-
-    //----------------------------
+    //--他のプレイヤーの生成--------
+    var otherPlayerContainer = new PIXI.Container();
+    var otherPlayerPoint = roomPlayers.map((p)=>{
+        var Point = new PIXI.Graphics();
+        console.log(p)
+        Point.lineStyle(0);
+        Point.beginFill(p.color, 1);
+        Point.drawCircle(0,0, 10);
+        Point.position = {
+            x:p.pos.x - BordObj.position.x,
+            y:p.pos.y - BordObj.position.y,
+        };
+        Point.endFill();
+        otherPlayerContainer.addChild(Point);
+        return Point
+    })
+    stage.addChild(otherPlayerContainer);
+    console.log(otherPlayerPoint)
 
     //ｰｰパネル作成-----------------
     var UiContainer = new PIXI.Container(); //UIをまとめるコンテナ
@@ -753,6 +775,7 @@ function GameRender() {
     // アニメーション関数を定義する
     // setInterval(()=>console.log(bordSquares[1][2].x),1000);
     var sendPosDirty = false;
+    var fireCounter = 0;
 
     function animate() {
 

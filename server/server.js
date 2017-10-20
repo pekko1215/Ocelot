@@ -16,45 +16,45 @@ var Rooms = {};
 var Players = {};
 
 
-var room = new Room({
-    name: "豚小屋", //ルーム名
-    createBy: new Player({name:"もちもち手裏剣"}), //作成者のPlayerインスタンス
-    isStarted: false, //ゲームがスタートしているか
-    game: null
-})
-var game = new Game({
-    bordSize: 15,
-    emitter:io
-})
-room.setGame(game);
-["pekko1215", "猫丸", "🍣野郎", "アルギン酸ナトリウム", "ゴリラ植松"].forEach((name) => {
-    var player = new Player({
-        name: name
-    })
-    Players[player.id] = player;
-    room.game.addPlayer(player);
-})
-Rooms[room.id] = room;
+// var room = new Room({
+//     name: "豚小屋", //ルーム名
+//     createBy: new Player({name:"もちもち手裏剣"}), //作成者のPlayerインスタンス
+//     isStarted: false, //ゲームがスタートしているか
+//     game: null
+// })
+// var game = new Game({
+//     bordSize: 15,
+//     emitter:io
+// })
+// room.setGame(game);
+// ["pekko1215", "猫丸", "🍣野郎", "アルギン酸ナトリウム", "ゴリラ植松"].forEach((name) => {
+//     var player = new Player({
+//         name: name
+//     })
+//     Players[player.id] = player;
+//     room.game.addPlayer(player);
+// })
+// Rooms[room.id] = room;
 
-var room = new Room({
-    name: "豚小屋1", //ルーム名
-    createBy: new Player({name:"もちもち手裏剣1"}), //作成者のPlayerインスタンス
-    isStarted: false, //ゲームがスタートしているか
-    game: null
-})
-var game = new Game({
-    bordSize: 15,
-    emitter:io
-})
-room.setGame(game);
-["pekko1215", "猫丸", "🍣野郎", "アルギン酸ナトリウム", "ゴリラ植松"].forEach((name) => {
-    var player = new Player({
-        name: name
-    })
-    Players[player.id] = player;
-    room.game.addPlayer(player);
-})
-Rooms[room.id] = room;
+// var room = new Room({
+//     name: "豚小屋1", //ルーム名
+//     createBy: new Player({name:"もちもち手裏剣1"}), //作成者のPlayerインスタンス
+//     isStarted: false, //ゲームがスタートしているか
+//     game: null
+// })
+// var game = new Game({
+//     bordSize: 15,
+//     emitter:io
+// })
+// room.setGame(game);
+// ["pekko1215", "猫丸", "🍣野郎", "アルギン酸ナトリウム", "ゴリラ植松"].forEach((name) => {
+//     var player = new Player({
+//         name: name
+//     })
+//     Players[player.id] = player;
+//     room.game.addPlayer(player);
+// })
+// Rooms[room.id] = room;
 
 io.on('connection', (socket) => {
     //ルーム情報の送信
@@ -67,9 +67,10 @@ io.on('connection', (socket) => {
                 createBy: room.createBy.name,
                 isStarted: room.isStarted,
                 id: room.id,
-                players: room.game.getPlayers()
+                players: room.game.toObject().players
             }
         })
+        console.log(arr);
         socket.emit('returnRooms', arr);
     })
 
@@ -83,7 +84,8 @@ io.on('connection', (socket) => {
             return;
         }
         var player = new Player({
-            name: data.name
+            name: data.name,
+            socket:socket
         })
         Players[player.id] = player;
         console.log(`Create Player ${data.name} -> ${player.id}`)
@@ -99,7 +101,6 @@ io.on('connection', (socket) => {
     //	}
     //}
     socket.on('createRoom', (data) => {
-        console.log(data)
         var room = new Room({
             name: data.name, //ルーム名
             createBy: Players[data.createBy], //作成者のPlayerインスタンス
@@ -111,7 +112,6 @@ io.on('connection', (socket) => {
             bordSize: data.bordSize || 15,
             emitter:socket
         })
-        game.addPlayer(Players[data.createBy])
         room.setGame(game);
         Rooms[room.id] = room;
         console.log(`Create Room ${room.name} by ${room.createBy.name}`)
@@ -121,11 +121,23 @@ io.on('connection', (socket) => {
     socket.on('joinRoom', (data) => {
         Rooms[data.room].game.addPlayer(Players[data.player]);
         console.log(`Join Room ${Players[data.player].name} to ${Rooms[data.room].name}`)
-		socket.emit('joinedRoom')
+        console.log(Rooms[data.room].toObject())
+        socket.emit('joinedRoom',Rooms[data.room].toObject())
+    })
+
+    socket.on('fire',(data)=>{
+        console.log(Rooms[data].game)
+        socket.emit('returnFire',Rooms[data].game.toObject());
     })
 
     socket.on('getRoom',(roomId)=>{
-		socket.emit('returnRoom',Rooms[roomId]);
+		socket.emit('returnRoom',Rooms[roomId].map((r)=>{return r.toObject()}));
+    })
+
+    socket.on('gameStart',(roomId)=>{
+        console.log(Rooms[roomId]);
+        Rooms[roomId].game.GameStart();
+        socket.emit('returnGameStart',Rooms[roomId].game.toObject());
     })
 
     socket.on('changePos',(data)=>{
