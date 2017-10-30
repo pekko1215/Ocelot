@@ -19,6 +19,7 @@ module.exports = Game = function(option) {
 Game.prototype.addPlayer = function(player) {
     this.players.push(player);
     console.log("Player : Add Player "+player.name)
+    this.emitPlayers('joinPlayer',player.toObject())
     return player
 };
 
