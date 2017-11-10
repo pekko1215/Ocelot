@@ -17,7 +17,8 @@ module.exports = function Player(option){
 			y:0
 		},
 		id:getUniqueStr(),
-		socket:null
+		socket:null,
+		prepared:false
 	}
 
 	Object.keys(define).forEach((key)=>{
@@ -31,6 +32,7 @@ module.exports.prototype.toObject = function(){
 		name:this.name,
 		pos:this.pos,
 		id:this.id,
+		prepared:this.prepared
 	}
 }
 

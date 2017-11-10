@@ -34,6 +34,12 @@ Room.prototype.toObject = function(){
     }
 }
 
+Room.prototype.isAllPrepared = function(){
+    return !this.game.players.some((p)=>{
+        return !p.prepared
+    })
+}
+
 function getUniqueStr(myStrong) {
     var strong = 1000;
     if (myStrong) strong = myStrong;
